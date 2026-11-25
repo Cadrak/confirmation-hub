@@ -99,6 +99,8 @@ input[type=date]{background:#fff;border:1px solid #dfeaea;color:var(--dark);bord
 .drow .dtag.src-walkin{background:var(--orange);color:#9a6410}
 .drow .dtag.src-winback{background:#e9e4f7;color:#4d3580}
 .drow .dnote{font-size:12px;color:var(--gray);font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drow .dphone{color:inherit;font-style:normal;text-decoration:underline dotted;cursor:pointer}
+.drow .dphone:hover{color:var(--dark)}
 .drow select{border:1px solid #dfeaea;border-radius:9px;padding:6px 6px;font-size:12px;width:100%;background:#fff;font-weight:700;cursor:pointer}
 .drow select.st-conf{background:var(--green);border-color:var(--green-b);color:#2e7d4f}
 .drow select.st-none{background:var(--blue);border-color:var(--blue-b);color:#245a92}
@@ -536,7 +538,7 @@ select.agent option{color:#1c2b33;background:#fff}
     <div class="hrow">
       <div class="brand">
         <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea">
-        <h1>Confirmation Hub 2.1.12 <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
+        <h1>Confirmation Hub 2.1.13 <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
       </div>
       <div class="hctl">
         <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">↻ Refresh</button>
@@ -1606,7 +1608,7 @@ function renderBoard(){
         + '<span class="dtag">'+m.type+' · '+m.lang+lsugBadge(m, slot, i)+'</span>'
         + '<label class="dep'+(m.dep?' on':'')+'" title="Deposit paid"><input type="checkbox" '+(m.dep?'checked':'')
           + ' onchange="edit(\''+slot+'\','+i+',\'dep\', this.checked)"><span>$</span></label>'
-        + '<span class="dnote" title="'+esc(dnoteTxt(m))+'">'+esc(dnoteTxt(m))+'</span>'
+        + '<span class="dnote" title="'+esc(dnoteTxt(m))+'">'+dnoteHtml(m)+'</span>'
         + sel(STATUSES, r.status, ST_CLS[r.status]||'', slot, i, 'status', '— status —')
         + '<button class="blockbtn ed" title="Edit in the roster" onclick="openRoster(bdate())">✎</button>'
         + '</div>';
@@ -1629,7 +1631,7 @@ function renderBoard(){
         + '<span class="dtag">'+m.type+' · '+m.lang+lsugBadge(m, r.slot, r.idx)+'</span>'
         + '<label class="dep'+(m.dep?' on':'')+'" title="Deposit paid"><input type="checkbox" '+(m.dep?'checked':'')
           + ' onchange="edit(\''+r.slot+'\','+r.idx+',\'dep\', this.checked)"><span>$</span></label>'
-        + '<span class="dnote" title="'+esc(dnoteTxt(m))+'">'+esc(dnoteTxt(m))+'</span>'
+        + '<span class="dnote" title="'+esc(dnoteTxt(m))+'">'+dnoteHtml(m)+'</span>'
         + sel(STATUSES, r.status, ST_CLS[r.status]||'', r.slot, r.idx, 'status', '— status —')
         + '<button class="blockbtn ed" title="Edit in the roster" onclick="openRoster(bdate())">✎</button>'
         + '</div>';
@@ -3995,6 +3997,32 @@ function refreshReplies(){
 function normPhone(v){ var d=String(v||'').replace(/\D/g,''); if(d.length===11 && d.charAt(0)==='1') d=d.slice(1); return d.length===10 ? d : ''; }
 function fmtPhone(d){ d=String(d||''); return d.length===10 ? '('+d.slice(0,3)+') '+d.slice(3,6)+'-'+d.slice(6) : d; }
 function dnoteTxt(m){ return (m.phone ? '☎ '+fmtPhone(m.phone)+(m.plain?' · ':'') : '')+m.plain; }
+function dnoteHtml(m){
+  return (m.phone ? '<a class="dphone" href="#" title="Open the conversation in GoHighLevel" data-ph="'+esc(m.phone)+'" onclick="openConv(this.dataset.ph);return false">☎ '+fmtPhone(m.phone)+'</a>'+(m.plain?' · ':'') : '')+esc(m.plain);
+}
+/* Day Board phone → the client's GHL conversation (same link as "Open chat ↗" in Replies).
+   Uses the conversation id the Replies tab already has; otherwise asks the server to find it by phone. */
+var CONV_IDS = {};
+function ghlConvUrl(id){ return 'https://app.gohighlevel.com/v2/location/'+GHL_LOC+'/conversations/conversations/'+encodeURIComponent(id); }
+function openConv(phone){
+  if(!online() || !gsKey()){ toast('⚠ Opening the GHL chat needs the connected (online) mode'); return; }
+  var known = CONV_IDS[phone];
+  if(!known) (RPL.raw||[]).forEach(function(x){ if(x.phone === phone && x.convId) known = x.convId; });
+  if(known){ window.open(ghlConvUrl(known), '_blank', 'noopener'); return; }
+  var w = window.open('', '_blank');                 /* opened now, inside the click, so the popup blocker allows it */
+  if(w){ try{ w.opener = null; w.document.title = 'Opening GHL…'; w.document.body.innerHTML = '<p style="font:15px sans-serif;padding:24px">Opening the conversation in GoHighLevel…</p>'; }catch(e){} }
+  fetch(WEBAPP_URL+'?action=convfind&phone='+phone+kq()).then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d && d.error === 'key'){ if(w) w.close(); authFail(); return; }
+      if(!d || !d.ok) throw new Error((d && d.error) || 'no answer');
+      var url = '';
+      if(d.convId){ CONV_IDS[phone] = d.convId; url = ghlConvUrl(d.convId); }
+      else if(d.contactId){ url = 'https://app.gohighlevel.com/v2/location/'+GHL_LOC+'/contacts/detail/'+encodeURIComponent(d.contactId); toast('No conversation yet for '+fmtPhone(phone)+' — opening the contact instead'); }
+      if(!url){ if(w) w.close(); toast('⚠ '+fmtPhone(phone)+' is not in GoHighLevel'); return; }
+      if(w) w.location.href = url; else window.open(url, '_blank', 'noopener');
+    })
+    .catch(function(err){ if(w) w.close(); toast('⚠ Could not open the GHL chat: '+err.message); });
+}
 function phoneDirRead(){ try{ return JSON.parse(localStorage.getItem('solea_phones')||'{}'); }catch(e){ return {}; } }
 function phoneFor(name){ return phoneDirRead()[nameFull(name)] || ''; }
 function sqCopyPhone(){ var c=SQ.list[SQ.i]; if(c && c.phone) copyText(fmtPhone(c.phone), 'sq-copyph', '☎ Phone'); }
