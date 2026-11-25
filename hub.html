@@ -444,6 +444,8 @@ footer{background:var(--dark);color:#9fb6bd;text-align:center;font-size:12px;pad
 .rp-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 #lock{position:fixed;inset:0;z-index:1000;background:var(--dark);display:flex;align-items:center;justify-content:center;padding:20px}
 #lock.hide{display:none}
+#paused{position:fixed;inset:0;z-index:1001;background:var(--dark);display:flex;align-items:center;justify-content:center;padding:20px}
+#paused.hide{display:none}
 #lock .lock-box{background:#fff;border-radius:18px;padding:28px;max-width:360px;width:100%;text-align:center}
 #lock h2{font-size:19px;margin-bottom:6px}
 #lock p{font-size:13px;color:var(--gray);margin-bottom:14px}
@@ -511,6 +513,13 @@ select.agent option{color:#1c2b33;background:#fff}
 </style>
 </head>
 <body>
+<div id="paused" class="hide">
+  <div class="lock-box">
+    <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea" style="height:38px;margin-bottom:14px">
+    <h2>Confirmation Hub is paused</h2>
+    <p>The hub was turned off by the administrator. Nothing is being sent or saved. This page will come back on its own when it is turned on again.</p>
+  </div>
+</div>
 <div id="lock">
   <div class="lock-box">
     <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea" style="height:38px;margin-bottom:14px">
@@ -527,7 +536,7 @@ select.agent option{color:#1c2b33;background:#fff}
     <div class="hrow">
       <div class="brand">
         <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea">
-        <h1>Confirmation Hub 2.1.11 <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
+        <h1>Confirmation Hub 2.1.12 <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
       </div>
       <div class="hctl">
         <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">↻ Refresh</button>
@@ -3133,9 +3142,26 @@ function authFail(msg){
 }
 function authCheck(key){                       /* resolves 'ok' | 'key' | 'offline' */
   return fetch(WEBAPP_URL+'?action=auth&key='+encodeURIComponent(key)).then(function(r){ return r.json(); })
-    .then(function(d){ return d && d.ok ? 'ok' : (d && d.error === 'key' ? 'key' : 'offline'); })
+    .then(function(d){ return d && d.ok ? 'ok' : (d && d.error === 'off' ? 'off' : (d && d.error === 'key' ? 'key' : 'offline')); })
     .catch(function(){ return 'offline'; });
 }
+/* KILL SWITCH — the owner can pause the whole hub from the server (Apps Script). The server blocks every
+   read and write; this screen only tells the team. Checked every minute so it also comes back on its own. */
+var PAUSED = false;
+function pausedShow(on){
+  PAUSED = !!on;
+  document.getElementById('paused').classList.toggle('hide', !PAUSED);
+}
+function pausedWatch(){
+  if(!online()) return;
+  fetch(WEBAPP_URL+'?action=auth&key='+encodeURIComponent(gsKey())).then(function(r){ return r.json(); })
+    .then(function(d){
+      var was = PAUSED;
+      pausedShow(d && d.error === 'off');
+      if(was && !PAUSED){ if(d && d.ok){ unlockOk(); } else authFail('Enter the hub key to continue.'); }
+    }).catch(function(){});
+}
+setInterval(pausedWatch, 60000);
 function unlockOk(){
   AUTH.ok = true;
   document.getElementById('lock').classList.add('hide');
@@ -3146,6 +3172,7 @@ function lockSubmit(){
   var v = document.getElementById('lock-key').value.trim(); if(!v) return;
   document.getElementById('lock-msg').textContent = 'Checking…';
   authCheck(v).then(function(res){
+    if(res === 'off'){ pausedShow(true); return; }
     if(res === 'ok'){ localStorage.setItem('solea_hub_key', v); unlockOk(); }
     else if(res === 'key') showLock('Wrong key. Try again.');
     else showLock('Could not reach the server. Check the connection and try again.');
@@ -3154,8 +3181,9 @@ function lockSubmit(){
 function authStart(){
   if(!online()){ unlockOk(); return; }         /* local mode: nothing to protect */
   var k = gsKey();
-  if(!k){ showLock(''); return; }
+  if(!k){ showLock(''); authCheck('').then(function(res){ if(res === 'off') pausedShow(true); }); return; }
   authCheck(k).then(function(res){
+    if(res === 'off'){ pausedShow(true); return; }
     if(res === 'ok' || res === 'offline') unlockOk();   /* offline: the cached data is already on this device */
     else authFail('The key was changed. Enter the new one.');
   });
