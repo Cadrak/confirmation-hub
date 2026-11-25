@@ -1,0 +1,23 @@
+<!-- Pegar esto UNA sola vez en el Custom Code de GoHighLevel. -->
+<div id="hub"></div>
+<script>
+(async () => {
+  const url = 'https://Cadrak.github.io/confirmation-hub/hub.html?v=' + Date.now();
+  const html = await (await fetch(url, { cache: 'no-store' })).text();
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const scripts = [...doc.querySelectorAll('script')];
+  scripts.forEach(s => s.remove());
+  document.head.append(...[...doc.head.children]);
+  document.getElementById('hub').innerHTML = doc.body.innerHTML;
+  for (const old of scripts) {
+    const s = document.createElement('script');
+    for (const a of old.attributes) s.setAttribute(a.name, a.value);
+    if (old.src) {
+      await new Promise((ok, err) => { s.onload = ok; s.onerror = err; document.body.appendChild(s); });
+    } else {
+      s.textContent = old.textContent;
+      document.body.appendChild(s);
+    }
+  }
+})();
+</script>
