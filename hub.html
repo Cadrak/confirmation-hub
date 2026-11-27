@@ -20,7 +20,7 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Roboto',Arial,sans-serif;background:var(--light);color:var(--dark);line-height:1.5}
 h1,h2,h3{font-family:'Montserrat',Arial,sans-serif}
-.container{max-width:1120px;margin:0 auto;padding:0 18px}
+.container{max-width:1400px;margin:0 auto;padding:0 18px}
 
 /* HEADER */
 header{background:var(--dark);color:#fff;position:fixed;top:0;left:0;right:0;z-index:60;box-shadow:0 2px 14px rgba(0,0,0,.25)}
@@ -73,8 +73,7 @@ body{padding-top:112px}   /* room for the fixed header (row + tabs) */
 }
 @keyframes mspin{to{transform:rotate(360deg)}}
 /* phone-only elements: hidden on PC; wrappers that don't exist for the PC layout */
-.mstat,.mtg,.av .mt,.mline,.mnote,.thide,.tl-hidbtn,.wk-mh,table.wk th .wkm,.rz-subm,.rz-mt,.rz-nb,.rz-more,.m-em,.m-auto,.m-info,.dpill-t,.m-schedh{display:none}
-.dpill{display:contents}
+.mstat,.mtg,.av .mt,.mline,.mnote,.wk-mh,table.wk th .wkm,.rz-subm,.rz-mt,.rz-nb,.rz-more,.d-only{display:none}
 .ttask .tx,.ttask .txi{display:contents}
 .tabpane{display:none}
 .tabpane.active{display:block}
@@ -586,6 +585,70 @@ select.agent option{color:#1c2b33;background:#fff}
 @media(max-width:820px){.tpl-cols{grid-template-columns:1fr}}
 .tpl-cols textarea{width:100%;border:1px solid #dfeaea;border-radius:10px;padding:10px;font-family:'Roboto',Arial,sans-serif;font-size:13.5px;line-height:1.45;resize:vertical}
 .tpl-prev{font-size:13px;min-height:60px}
+/* ===== v2.3 — PILL SYSTEM + one top bar per tab (PC and phone) ===== */
+:root{--pill-h:36px}
+.boardbar,.dbar,.rbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+.dbar .msgday{margin-left:0;gap:8px;flex-wrap:nowrap}
+/* segmented group: joined pills, the active one filled */
+.boardbar .switch,.dbar .switch{display:inline-flex;height:var(--pill-h);border:1px solid #cfe3e2;border-radius:999px;overflow:hidden;background:var(--primary-soft);flex:0 0 auto}
+.boardbar .switch button,.dbar .switch button{display:inline-flex;align-items:center;height:100%;padding:0 14px;border:0;border-right:1px solid #cfe3e2;border-radius:0;background:transparent;
+  font-family:'Montserrat',sans-serif;font-weight:600;font-size:13px;color:var(--dark)!important;white-space:nowrap;cursor:pointer}
+.boardbar .switch button:last-child,.dbar .switch button:last-child{border-right:0}
+.boardbar .switch button.active,.dbar .switch button.active{background:var(--primary);color:#fff!important}
+/* single pills: date, ⓘ, actions */
+.dpill{position:relative;display:inline-flex;align-items:center;height:var(--pill-h);padding:0 14px;border:1px solid #cfe3e2;border-radius:999px;background:var(--primary-soft);
+  font-family:'Montserrat',sans-serif;font-weight:600;font-size:13px;color:var(--dark);white-space:nowrap;cursor:pointer;flex:0 0 auto}
+.dpill input[type=date]{position:absolute;inset:0;width:100%;height:100%;min-width:0;opacity:0;padding:0;margin:0;border:0;cursor:pointer}
+.m-info{display:inline-flex;align-items:center;justify-content:center;flex:0 0 var(--pill-h);width:var(--pill-h);height:var(--pill-h);border:1px solid #cfe3e2;border-radius:999px;
+  background:var(--primary-soft);color:var(--primary-dark);font-size:16px;cursor:pointer;padding:0}
+.show-help .m-info{background:var(--primary);border-color:var(--primary);color:#fff}
+.boardbar .btn.sm,.rbar .btn.sm{display:inline-flex;align-items:center;gap:4px;height:var(--pill-h);padding:0 16px;border-radius:999px;font-weight:600;font-size:13px;white-space:nowrap}
+.rbar .btn.ghost{background:var(--primary-soft);border:1px solid #cfe3e2;color:var(--dark)}
+#tlauto-tag,#tlauto-btn,#mauto-tag,#mauto-btn{display:none!important}
+/* status text at the end, small and grey */
+.boardbar .sync{margin-left:auto}
+.rbar #rp-status{margin-left:auto;font-size:11.5px;white-space:nowrap}
+/* help texts: only after ⓘ */
+.m-help{display:none}
+.show-help .m-help{display:block;flex-basis:100%;font-size:12.5px;line-height:1.45}
+/* Messages search: wide flexible pill */
+.mbar #msearch{flex:1 1 240px;width:auto;min-width:0;height:var(--pill-h);padding:0 16px;border-radius:999px;border:1px solid #cfe3e2;background:#fff;font-size:13.5px}
+/* sentence case + emoji everywhere */
+.section-title,.panel h2,.nr-head h2,.reminders h2,.duty h3,.rep-loc,.now-cell .role,.badge,.rp-msg .rp-who,.rep-chip span,#settings-modal .set-sec h3,.tp-time{text-transform:none;letter-spacing:normal}
+.section-title{font-size:15.5px}
+/* Scheduled messages: one foldable line */
+#sched-panel{padding:6px 14px}
+#sched-panel .m-schedh{display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Montserrat',sans-serif;font-weight:700;font-size:13.5px;color:var(--primary-dark);min-height:40px}
+#sched-panel .m-fold{color:var(--gray);font-size:11px;transition:transform .15s}
+#sched-panel.mopen .m-fold{transform:rotate(90deg)}
+#sched-panel .m-schedu{font-size:11.5px;font-weight:400;color:var(--gray);font-family:'Roboto',sans-serif}
+#sched-panel .m-schedr{margin-left:auto;width:var(--pill-h);height:var(--pill-h);border:1px solid #cfe3e2;border-radius:999px;background:var(--primary-soft);font-size:16px;cursor:pointer}
+#sched-panel > h2{display:none}
+#sched-panel .sched-tools{display:none!important}
+#sched-panel:not(.mopen) #sched-list{display:none}
+/* toast: hidden unless it is showing a message */
+.toast{opacity:0;visibility:hidden;pointer-events:none;transition:bottom .3s,opacity .2s,visibility .2s}
+.toast.show{opacity:1;visibility:visible}
+.toast:empty{display:none}
+/* Board (PC too): colour stripe by status, Face/Body + language icons */
+.drow{box-shadow:inset 4px 0 0 var(--stc,transparent)}
+.drow .dtag.dic{font-size:15px;line-height:1.2;padding:2px 8px}
+/* Timeline: ⏰ Now, done tasks dimmed, Hide / Show hidden (PC too; same storage as the phone) */
+.now-tag{display:inline-block;background:var(--primary);color:#fff;border-radius:999px;font-size:11px;font-weight:700;padding:1px 8px;margin-right:7px;vertical-align:1px}
+.ttask.done{opacity:.6}
+.ttask .thide{display:inline-block;margin:8px 0 0;background:none;border:1px solid #d5e0e0;border-radius:999px;padding:4px 12px;font-size:11.5px;color:var(--gray);cursor:pointer}
+.ttask.hid{display:none}
+.showhid .ttask.hid{display:flex;opacity:.55}
+.tl-hidbtn{display:block;width:100%;margin-top:6px;background:#f2f7f7;border:1px dashed #cfe3e2;border-radius:10px;padding:9px;font-size:12.5px;font-weight:700;color:var(--gray);cursor:pointer}
+/* Settings: sub-tabs + section titles with emoji, statuses as separate pills */
+#settings-modal .set-sec h3[data-ic]::before{content:attr(data-ic) " "}
+#settings-statuses .st{display:inline-block;padding:4px 11px;border-radius:999px;border:1px solid rgba(0,0,0,.09);font-size:12px;font-weight:700;margin:3px 6px 3px 0!important;white-space:nowrap}
+/* phone swipe between tabs */
+.tabpane.swl{animation:swl .22s ease}
+.tabpane.swr{animation:swr .22s ease}
+@keyframes swl{from{transform:translateX(40px);opacity:.4}to{transform:none;opacity:1}}
+@keyframes swr{from{transform:translateX(-40px);opacity:.4}to{transform:none;opacity:1}}
+@media(prefers-reduced-motion:reduce){.tabpane.swl,.tabpane.swr{animation:none}}
 /* ===== PHONE (≤760px) v2.2: full-width sticky header, compact board, client cards, collapsible Timeline ===== */
 @media(max-width:760px){
   body{overflow-x:clip}
@@ -748,48 +811,7 @@ select.agent option{color:#1c2b33;background:#fff}
 }
 /* ===== PHONE (≤760px) v2.2.3: day pills, help on ⓘ, Replies one row, Settings as a tab, sentence case ===== */
 @media(max-width:760px){
-  .m-em{display:inline}
-  .d-only{display:none}
-  /* sentence case — no UPPERCASE + letter-spacing on phones */
-  .section-title,.panel h2,.nr-head h2,.reminders h2,.duty h3,.rep-loc,.now-cell .role,.badge,.rp-msg .rp-who,.rep-chip span,#settings-modal .set-sec h3,.tp-time{text-transform:none;letter-spacing:normal}
   .section-title{font-size:15px;margin:16px 0 10px}
-  /* day pills (Timeline, Messages, Board) */
-  .dbar{flex-wrap:wrap;gap:6px;margin:10px 0 0}
-  .dbar .m-help{display:none;order:3;flex-basis:100%;font-size:12px;line-height:1.4}
-  .dbar.show-help .m-help{display:block}
-  .dbar .msgday{order:2;margin-left:0;flex:1 1 100%;flex-wrap:nowrap;gap:5px;min-width:0}
-  .dbar .switch,.boardbar .switch{border:0;gap:5px;overflow:visible;border-radius:0}
-  .dbar .switch button,.boardbar .switch button,.dbar .m-auto,.dpill{display:inline-flex;align-items:center;justify-content:center;border:1px solid #cfe3e2;border-radius:16px;background:#fff;
-    padding:6px 6px;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;color:var(--gray);white-space:nowrap;cursor:pointer;min-height:34px}
-  .dbar .switch button.active,.boardbar .switch button.active,.dbar .m-auto.active{background:var(--primary);border-color:var(--primary);color:#fff!important}
-  .dpill{position:relative;color:var(--dark);flex:0 0 auto}
-  .dpill .dpill-t{display:inline}
-  .dpill input[type=date]{position:absolute;inset:0;width:100%!important;height:100%;min-width:0!important;opacity:0;padding:0!important;border:0;cursor:pointer}
-  #tlauto-tag,#tlauto-btn,#mauto-tag,#mauto-btn{display:none!important}
-  .m-info{display:inline-flex;align-items:center;justify-content:center;flex:0 0 32px;width:32px;height:34px;border:1px solid #cfe3e2;border-radius:16px;background:#fff;color:var(--gray);font-size:15px;cursor:pointer;margin-left:auto}
-  .show-help .m-info{background:var(--primary-soft);border-color:var(--primary);color:var(--primary-dark)}
-  .boardbar .dpill{flex:1 1 auto;min-width:0}
-  .boardbar .switch button{padding:6px 8px}
-  @media(max-width:374px){ .dbar .m-day{display:none} }
-  /* Messages: search full width, pills below */
-  .mbar #msearch{order:1;flex:1 1 100%;width:100%;padding:10px 14px;font-size:14px}
-  /* Timeline: scheduled messages = one foldable line */
-  #sched-panel{margin-top:10px!important;padding:6px 10px}
-  #sched-panel .m-schedh{display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;color:var(--primary-dark);min-height:38px}
-  #sched-panel .m-fold{color:var(--gray);font-size:11px;transition:transform .15s}
-  #sched-panel.mopen .m-fold{transform:rotate(90deg)}
-  #sched-panel .m-schedr{margin-left:auto;width:38px;height:36px;border:1px solid #cfe3e2;border-radius:12px;background:#fff;font-size:16px;cursor:pointer}
-  #sched-panel > h2{display:none}
-  #sched-panel:not(.mopen) .sched-tools,#sched-panel:not(.mopen) #sched-list{display:none!important}
-  #sched-panel .sched-tools .btn{display:none}
-  /* Replies: one row */
-  .rbar{flex-wrap:nowrap;gap:5px;margin:10px 0}
-  .rbar .m-help{display:none}
-  .rbar.show-help{flex-wrap:wrap}
-  .rbar.show-help .m-help{display:block;order:9;flex-basis:100%;font-size:12px;line-height:1.4}
-  .rbar .btn.sm{flex:0 0 auto;padding:7px 9px;font-size:11.5px;white-space:nowrap;min-height:34px}
-  .rbar #rp-status{flex:1 1 auto;min-width:0;font-size:10.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .rbar .m-info{margin-left:0}
   /* Settings as a tab (between header and bottom bar; edges set by mSetSync) */
   #settings-modal{z-index:65;background:var(--light);padding:0;overflow-y:auto;-webkit-overflow-scrolling:touch;align-items:flex-start}
   #settings-modal.open{display:block}
@@ -801,10 +823,39 @@ select.agent option{color:#1c2b33;background:#fff}
   #settings-modal .set-tabs button{flex:0 0 auto;border:1px solid #cfe3e2;border-radius:16px;background:#fff;margin:0;padding:7px 12px;font-size:12px;white-space:nowrap;min-height:36px}
   #settings-modal .set-tabs button.active{background:var(--primary);border-color:var(--primary);color:#fff}
   #settings-modal .set-sec h3{font-size:14px}
-  #settings-modal .set-sec h3[data-ic]::before{content:attr(data-ic) " "}
-  #settings-modal .set-sec .st{display:inline-block;white-space:nowrap}
   body.set-open .tabs button.active{border-top-color:transparent;background:none}
   body.set-open #m-settings{border-top-color:var(--primary);background:rgba(31,200,196,.09)}
+}
+/* ===== PHONE (≤760px) v2.3: pills ≥40px, bars in max 2 rows ===== */
+@media(max-width:760px){
+  :root{--pill-h:40px}
+  .boardbar,.dbar,.rbar{gap:6px;margin:10px 0 0}
+  .boardbar{flex-wrap:nowrap}
+  .boardbar .switch button,.dbar .switch button{padding:0 9px;font-size:12px}
+  .boardbar .dpill{flex:1 1 auto;min-width:0;justify-content:center;padding:0 8px;font-size:12px}
+  .boardbar .btn.sm{width:var(--pill-h);padding:0;justify-content:center;font-size:17px;border-radius:999px;height:var(--pill-h)}
+  .boardbar .sync{display:none}
+  .boardbar .dpill input[type=date]{width:100%;padding:0;flex:none}
+  .drow{box-shadow:none}
+  .dbar .msgday{flex:1 1 100%;min-width:0}
+  .dbar .dpill{padding:0 9px;font-size:12px}
+  .dbar .m-info{margin-left:auto}
+  .mbar #msearch{flex:1 1 100%;font-size:14px}
+  .rbar .btn.sm{padding:0 11px;font-size:12px}
+  .rbar .blbl{display:none}
+  .rbar .btn.sm[aria-label="Refresh"]{width:var(--pill-h);padding:0;justify-content:center}
+  .rbar #rp-status{flex:1 1 100%;margin-left:0;font-size:11px;text-align:right}
+  .show-help .m-help{font-size:12px}
+  @media(max-width:420px){ .dbar .m-day{display:none} }
+  @media(max-width:374px){
+    .dbar .switch button,.boardbar .switch button{padding:0 7px;font-size:11.5px}
+    .dbar .dpill{padding:0 7px;font-size:11.5px}
+    .rbar .btn.sm{padding:0 9px;font-size:11.5px}
+  }
+  .rbar #rp-status:empty{display:none}
+  #sched-panel{margin-top:10px!important;padding:4px 10px}
+  /* Settings tab: sub-tab pills */
+  #settings-modal .set-tabs button{min-height:40px}
 }
 @media(max-width:760px) and (prefers-reduced-motion:reduce){
   .ttask .tx{transition:none}
@@ -836,7 +887,7 @@ select.agent option{color:#1c2b33;background:#fff}
     <div class="hrow">
       <div class="brand">
         <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea">
-        <h1 title="Confirmation Hub 2.2.3">Confirmation Hub <span class="hver">2.2.3</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
+        <h1 title="Confirmation Hub 2.3.0">Confirmation Hub <span class="hver">2.3.0</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
       </div>
       <div class="hctl">
         <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">🔄 Refresh</button>
@@ -851,8 +902,8 @@ select.agent option{color:#1c2b33;background:#fff}
       <button id="tab-btn-messages" onclick="showTab('messages')" title="Messages"><i class="ti">✉️</i><span class="tlbl"> Messages</span></button>
       <button id="tab-btn-replies" onclick="showTab('replies')" title="Replies"><i class="ti">💬</i><span class="tlbl"> Replies</span> <span class="badge-n" id="rp-left" style="display:none"></span></button>
       <!-- phone only: Refresh + Settings move to the bottom bar -->
-      <button class="m-only" id="m-refresh" onclick="refreshNow()" title="Refresh" aria-label="Refresh"><i class="ti">🔄</i></button>
       <button class="m-only" id="m-settings" onclick="openSettings()" title="Settings" aria-label="Settings"><i class="ti">⚙️</i></button>
+      <button class="m-only" id="m-refresh" onclick="refreshNow()" title="Refresh" aria-label="Refresh"><i class="ti">🔄</i></button>
     </div>
   </div>
 </header>
@@ -868,7 +919,7 @@ select.agent option{color:#1c2b33;background:#fff}
         <button id="trk-next" onclick="setTrack('next')" style="color:var(--gray)"><span class="m-em">🌙 </span>Next<span class="blbl">-Day</span></button>
       </div>
       <span class="dpill"><span class="dpill-t" id="bdate-pill"></span><input type="date" id="bdate" onchange="loadBoard()"></span>
-      <button class="btn primary sm" onclick="openRoster()" title="Edit roster" aria-label="Edit roster">✎<span class="blbl"> Edit roster</span></button>
+      <button class="btn primary sm" onclick="openRoster()" title="Edit roster" aria-label="Edit roster">✏️<span class="blbl"> Edit roster</span></button>
       <button class="btn gold sm" onclick="openReport()" title="Report" aria-label="Report">📊<span class="blbl"> Report</span></button>
       <div class="sync"><div class="dot" id="sync-dot"></div><span id="sync-txt">local mode</span></div>
     </div>
@@ -882,21 +933,19 @@ select.agent option{color:#1c2b33;background:#fff}
   <!-- ============ TIMELINE ============ -->
   <div class="tabpane" id="tab-timeline">
     <div class="msgbar dbar" style="margin-bottom:0">
-      <span class="m-help" style="font-size:12.5px;color:var(--gray)">Day for the <b>Start sending</b> queues. Auto = Same-Day lane → today, Next-Day lane → tomorrow.</span>
       <div class="msgday" title="Choose which day's clients the Start sending queues use. Auto = each lane uses its own day.">
         <div class="switch" style="border-color:#cfe3e2">
           <button id="tlt-same" onclick="setTlDay('same')" style="color:var(--gray)"><span class="m-em">☀️ </span>Same<span class="m-day">-Day</span></button>
           <button id="tlt-next" onclick="setTlDay('next')" style="color:var(--gray)"><span class="m-em">🌙 </span>Next<span class="m-day">-Day</span></button>
+          <button type="button" class="m-auto" id="tlt-mauto" onclick="setTlDay('auto')">🔁 Auto</button>
         </div>
-        <button type="button" class="m-auto" id="tlt-mauto" onclick="setTlDay('auto')">🔁 Auto</button>
         <span class="dpill"><span class="dpill-t" id="tldate-pill"></span><input type="date" id="tldate" onchange="setTlDay('date', this.value)"></span>
         <span id="tlauto-tag" class="rep-tag">Auto</span>
         <button class="btn ghost sm" id="tlauto-btn" onclick="setTlDay('auto')" style="display:none">↺ Auto</button>
-        <button type="button" class="m-info" onclick="mHelp(this)" aria-label="Help" title="Help">ⓘ</button>
       </div>
     </div>
     <div class="panel" id="sched-panel" style="margin-top:16px">
-      <div class="m-schedh" onclick="schedFold()"><span id="m-sched-txt">🕒 Scheduled</span><span class="m-fold">▸</span><button type="button" class="m-schedr" aria-label="Refresh" title="Refresh" onclick="event.stopPropagation();loadSched()">🔄</button></div>
+      <div class="m-schedh" onclick="schedFold()"><span id="m-sched-txt">🕒 Scheduled</span><span class="m-fold">▸</span><span class="m-schedu" id="m-sched-upd"></span><button type="button" class="m-schedr" aria-label="Refresh" title="Refresh" onclick="event.stopPropagation();loadSched()">🔄</button></div>
       <h2>🕒 Scheduled messages <span id="sched-count" class="badge-n" style="background:var(--orange-b)"></span></h2>
       <div class="sched-tools" style="display:flex;gap:10px;align-items:center;margin-bottom:8px"><button class="btn ghost sm" onclick="loadSched()">↻ Refresh</button><span id="sched-status" style="font-size:11.5px;color:var(--gray)"></span></div>
       <div id="sched-list"></div>
@@ -922,32 +971,25 @@ select.agent option{color:#1c2b33;background:#fff}
 
   <!-- ============ WEEK ============ -->
   <div class="tabpane" id="tab-week">
-    <div class="msgbar">
-      <span class="wk-help" style="font-size:12.5px;color:var(--gray)">Next 6 days for <b id="wk-loc-name">Brickell</b> — switch location in ⚙ Settings.</span>
-      <button class="btn primary sm" onclick="openRoster(todayMiami())">＋ Fill a day</button>
-      <button class="btn dark sm" id="wk-copy" onclick="copyWeekText()">📋 Copy as text</button>
-      <button class="btn ghost sm" onclick="loadWeek()">↻ Refresh</button>
-      <span id="wk-sync" style="font-size:11.5px;color:var(--gray)"></span>
-    </div>
     <div id="weekgrid"></div>
   </div>
 
   <!-- ============ MESSAGES ============ -->
   <div class="tabpane" id="tab-messages">
     <div class="msgbar dbar mbar">
-      <input id="msearch" type="text" placeholder="Search messages…" oninput="renderMessages()">
-      <span class="m-help" style="font-size:12.5px;color:var(--gray)">Click a message to open it. Pick a client to fill in their name &amp; time.</span>
+      <input id="msearch" type="text" placeholder="🔍 Search messages…" oninput="renderMessages()">
       <div class="msgday" title="Choose which day's clients the messages use. Auto = each message uses its own day.">
         <div class="switch" style="border-color:#cfe3e2">
           <button id="mtrk-same" onclick="setMsgDay('same')" style="color:var(--gray)"><span class="m-em">☀️ </span>Same<span class="m-day">-Day</span></button>
           <button id="mtrk-next" onclick="setMsgDay('next')" style="color:var(--gray)"><span class="m-em">🌙 </span>Next<span class="m-day">-Day</span></button>
+          <button type="button" class="m-auto" id="mtrk-mauto" onclick="setMsgDay('auto')">🔁 Auto</button>
         </div>
-        <button type="button" class="m-auto" id="mtrk-mauto" onclick="setMsgDay('auto')">🔁 Auto</button>
         <span class="dpill"><span class="dpill-t" id="mdate-pill"></span><input type="date" id="mdate" onchange="setMsgDay('date', this.value)"></span>
         <span id="mauto-tag" class="rep-tag">Auto</span>
         <button class="btn ghost sm" id="mauto-btn" onclick="setMsgDay('auto')" style="display:none">↺ Auto</button>
         <button type="button" class="m-info" onclick="mHelp(this)" aria-label="Help" title="Help">ⓘ</button>
       </div>
+      <span class="m-help" style="font-size:12.5px;color:var(--gray)">Click a message to open it. Pick a client to fill in their name &amp; time.</span>
     </div>
     <div id="msglist"></div>
   </div>
@@ -955,12 +997,12 @@ select.agent option{color:#1c2b33;background:#fff}
   <!-- ============ REPLIES ============ -->
   <div class="tabpane" id="tab-replies">
     <div class="msgbar rbar">
-      <span class="m-help" style="font-size:12.5px;color:var(--gray)">Chats with clients <b>on your roster</b> (yesterday · today · tomorrow) — the last 3 messages, from the client and from the team. Everything else in GHL is ignored.</span>
-      <button class="btn ghost sm" id="rp-toggle" onclick="rpToggleAll()">Showing: new only</button>
-      <button class="btn ghost sm" onclick="rpAllSeen()"><span class="d-only">✓</span><span class="m-em">✅</span> Mark all seen</button>
-      <button class="btn ghost sm" onclick="loadReplies()" aria-label="Refresh"><span class="d-only">↻ Refresh</span><span class="m-em">🔄</span></button>
-      <span id="rp-status" style="font-size:11.5px;color:var(--gray)"></span>
+      <button class="btn ghost sm" id="rp-toggle" onclick="rpToggleAll()">🆕 New only</button>
+      <button class="btn ghost sm" onclick="rpAllSeen()">✅ Mark all seen</button>
+      <button class="btn ghost sm" onclick="loadReplies()" aria-label="Refresh" title="Refresh">🔄<span class="blbl"> Refresh</span></button>
       <button type="button" class="m-info" onclick="mHelp(this)" aria-label="Help" title="Help">ⓘ</button>
+      <span id="rp-status" style="font-size:11.5px;color:var(--gray)"></span>
+      <span class="m-help" style="font-size:12.5px;color:var(--gray)">Chats with clients <b>on your roster</b> (yesterday · today · tomorrow) — the last 3 messages, from the client and from the team. Everything else in GHL is ignored.</span>
     </div>
     <div id="rp-list"></div>
   </div>
@@ -971,7 +1013,7 @@ select.agent option{color:#1c2b33;background:#fff}
 <div class="modal-bg" id="settings-modal">
   <div class="modal wide">
     <button class="close-x" onclick="closeSettings()">×</button>
-    <div class="tp-title">⚙ Settings</div>
+    <div class="tp-title">⚙️ Settings</div>
     <div class="set-tabs">
       <button id="stab-general" class="active" onclick="setSettingsTab('general')"><span class="m-em">⚙️ </span>General</button>
       <button id="stab-rooms" onclick="setSettingsTab('rooms')"><span class="m-em">🚪 </span>Rooms</button>
@@ -1921,7 +1963,7 @@ function renderBoard(){
       html += '<div class="drow'+(i>=s.target?' extra':'')+mStCls(r)+'">'
         + '<span class="dname" title="Edit in the roster" onclick="openRoster(bdate())">'+replyBadge(m.phone)+newBadge(r)+esc(r.client)+histBadge(m.phone)+'</span>'
         + '<span class="dtag src '+(SRC_CLS[r.source]||'')+'">'+esc(r.source||'—')+'</span>'
-        + '<span class="dtag">'+m.type+' · '+m.lang+lsugBadge(m, slot, i)+'</span>'
+        + '<span class="dtag dic">'+dIcons(m)+lsugBadge(m, slot, i)+'</span>'
         + '<label class="dep'+(m.dep?' on':'')+'" title="Deposit paid"><input type="checkbox" '+(m.dep?'checked':'')
           + ' onchange="edit(\''+slot+'\','+i+',\'dep\', this.checked)"><span>$</span></label>'
         + '<span class="dnote" title="'+esc(dnoteTxt(m))+'">'+dnoteHtml(m)+'</span>'
@@ -1945,7 +1987,7 @@ function renderBoard(){
       html += '<div class="drow'+mStCls(r)+'">'
         + '<span class="dname" onclick="openRoster(bdate())"><span class="ogtime">'+fmtTime(r.slot)+'</span> '+replyBadge(m.phone)+newBadge(r)+esc(r.client)+histBadge(m.phone)+'</span>'
         + '<span class="dtag src '+(SRC_CLS[r.source]||'')+'">'+esc(r.source||'—')+'</span>'
-        + '<span class="dtag">'+m.type+' · '+m.lang+lsugBadge(m, r.slot, r.idx)+'</span>'
+        + '<span class="dtag dic">'+dIcons(m)+lsugBadge(m, r.slot, r.idx)+'</span>'
         + '<label class="dep'+(m.dep?' on':'')+'" title="Deposit paid"><input type="checkbox" '+(m.dep?'checked':'')
           + ' onchange="edit(\''+r.slot+'\','+r.idx+',\'dep\', this.checked)"><span>$</span></label>'
         + '<span class="dnote" title="'+esc(dnoteTxt(m))+'">'+dnoteHtml(m)+'</span>'
@@ -2002,7 +2044,10 @@ function dpillSet(id, d){
 }
 function mHelp(btn){ var bar = btn.closest('.msgbar'); if(bar) bar.classList.toggle('show-help'); }
 function schedFold(){ var p = document.getElementById('sched-panel'); if(p) p.classList.toggle('mopen'); }
-function schedMob(n){ var el = document.getElementById('m-sched-txt'); if(el) el.textContent = n ? '🕒 Scheduled: ' + n : '🕒 Nothing scheduled'; }
+function schedMob(n){
+  var el = document.getElementById('m-sched-txt'); if(el) el.textContent = n ? '🕒 Scheduled: ' + n : '🕒 Nothing scheduled';
+  var u = document.getElementById('m-sched-upd'), st = document.getElementById('sched-status'); if(u && st) u.textContent = st.textContent;
+}
 function mSecTitle(t){
   var x = String(t||'').toLowerCase();
   if(/same/.test(x)) return '☀️ Same-day confirmations';
@@ -2043,10 +2088,43 @@ function setIcons(){
     inp.addEventListener('click', function(){ if(isMobile() && inp.showPicker){ try{ inp.showPicker(); }catch(e){} } });
   });
   var ms = document.getElementById('msearch');
-  function ph(){ if(ms) ms.placeholder = isMobile() ? '🔍 Search messages…' : 'Search messages…'; }
+  function ph(){ if(ms) ms.placeholder = '🔍 Search messages…'; }
   ph();
   if(MOB_MQ){ var f = function(){ ph(); if(settingsOpen()) mSetSync(true); }; if(MOB_MQ.addEventListener) MOB_MQ.addEventListener('change', f); else if(MOB_MQ.addListener) MOB_MQ.addListener(f); }
   window.addEventListener('resize', function(){ if(settingsOpen()) mSetSync(true); });
+})();
+/* Board: Face/Body + language as icons (tooltips keep the words) */
+function dIcons(m){
+  return '<span title="'+m.type+'">'+(m.type==='Body'?'💪':'🧖')+'</span> <span title="'+(m.lang==='ES'?'Spanish':'English')+'">'+(m.lang==='ES'?'🇪🇸':'🇺🇸')+'</span>';
+}
+/* phone: swipe left / right on the content to go to the next / previous tab */
+(function(){
+  var ORDER = ['board','timeline','week','messages','replies'], st = null;
+  function hScroll(el){
+    for(; el && el !== document.body; el = el.parentElement){
+      if(el.scrollWidth > el.clientWidth + 2){ var ox = getComputedStyle(el).overflowX; if(ox === 'auto' || ox === 'scroll') return true; }
+    }
+    return false;
+  }
+  document.addEventListener('touchstart', function(e){
+    st = null;
+    if(!isMobile() || e.touches.length !== 1) return;
+    var t = e.target;
+    if(!t.closest || !t.closest('.tabpane')) return;
+    if(t.closest('input,select,textarea,[contenteditable="true"]') || hScroll(t)) return;
+    if(settingsOpen() || document.querySelector('.modal-bg.open')) return;
+    st = {x:e.touches[0].clientX, y:e.touches[0].clientY, t:Date.now()};
+  }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if(!st) return;
+    var c = e.changedTouches[0], dx = c.clientX - st.x, dy = c.clientY - st.y, dt = Date.now() - st.t; st = null;
+    if(Math.abs(dx) <= 60 || Math.abs(dx) <= 1.5*Math.abs(dy) || dt >= 600) return;
+    var i = ORDER.indexOf(TAB), j = i + (dx < 0 ? 1 : -1);
+    if(i < 0 || j < 0 || j >= ORDER.length) return;
+    showTab(ORDER[j]); window.scrollTo(0, 0);
+    var pane = document.getElementById('tab-'+ORDER[j]);
+    if(pane){ pane.classList.remove('swl','swr'); void pane.offsetWidth; pane.classList.add(dx < 0 ? 'swl' : 'swr'); setTimeout(function(){ pane.classList.remove('swl','swr'); }, 260); }
+  }, {passive:true});
 })();
 function renderLaneCounts(){
   /* cache only — never hits the network (this runs after every edit) */
@@ -2147,7 +2225,7 @@ function renderLanes(){
       html += '<div class="'+cls+'" data-id="'+tk.id+'" onclick="tlTap(this, event)">'
         + '<input type="checkbox" '+(checks[tk.id]?'checked':'')+' onchange="setCheck(\''+tk.id+'\', this.checked)">'
         + '<div class="t">'+tk.t+'</div>'
-        + '<div class="bd"><div class="title">'+tk.title+'</div><div class="tx"><div class="txi"><div class="desc">'+tk.desc+'</div>'+actButtons(tk)
+        + '<div class="bd"><div class="title">'+(i===cur ? '<span class="now-tag">⏰ Now</span>' : '')+tk.title+'</div><div class="tx"><div class="txi"><div class="desc">'+tk.desc+'</div>'+actButtons(tk)
         + '<button class="thide" onclick="tlHide(\''+tk.id+'\','+(isHid?'false':'true')+')">'+(isHid?'👁 Unhide':'🙈 Hide')+'</button></div></div></div>'
         + '</div>';
     });
@@ -4449,10 +4527,9 @@ function renderReplies(){
   var sTxt = RPL.err === 'key' ? '🔑 key missing or wrong'
            : RPL.err === 'offline' ? '⚠ offline · showing last data'
            : RPL.lastSync ? 'checked ' + hhmm() + ' · GHL last read ' + (RPL.server.lastSync ? rpAgo(RPL.server.lastSync) : 'never') : 'loading…';
-  if(isMobile() && !RPL.err && RPL.lastSync) sTxt = '⏱ ' + hhmm() + ' · GHL ' + (RPL.server.lastSync ? rpAgo(RPL.server.lastSync) : 'never');   /* phone: short */
+  if(!RPL.err && RPL.lastSync) sTxt = '⏱ checked ' + hhmm() + ' · GHL ' + (RPL.server.lastSync ? rpAgo(RPL.server.lastSync) : 'never');
   if(st) st.textContent = sTxt;
-  document.getElementById('rp-toggle').textContent = isMobile() ? (RPL.showAll ? '📋 All' : '🆕 New only')
-                                                               : (RPL.showAll ? 'Showing: all (3 days)' : 'Showing: new only');
+  document.getElementById('rp-toggle').textContent = RPL.showAll ? '📋 All' : '🆕 New only';
   var html = '';
   if(RPL.err === 'key') html += '<div class="callout-stop">🔑 The Replies key is missing or wrong. <button class="btn dark sm" onclick="askReplyKey()">Enter key</button></div>';
   if(RPL.server.lastError) html += '<div class="callout-stop" style="background:#fff3d6;border-color:#f0c36d;color:#8a5a00">⚠ GHL sync problem: ' + esc(RPL.server.lastError) + '</div>';
