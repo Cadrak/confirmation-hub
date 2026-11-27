@@ -223,6 +223,27 @@ input[type=date]{background:#fff;border:1px solid #dfeaea;color:var(--dark);bord
 .cut.hit{background:var(--red);border-color:var(--red-b)}
 .panel .foot{font-size:12px;color:var(--gray);margin-top:10px}
 .panel .foot b{color:#b23c3c}
+/* No-reply detector (Day Board) */
+.nr-panel{background:#fff;border:2px solid var(--red-b);border-radius:14px;padding:12px 16px;margin:12px 0 6px}
+.nr-panel.calm{border-color:#e3f0f0}
+.nr-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;cursor:pointer}
+.nr-head h2{font-size:13.5px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:#b23c3c;margin:0}
+.nr-panel.calm .nr-head h2{color:var(--primary-dark)}
+.nr-head .nr-sub{font-size:12px;color:var(--gray)}
+.nr-head .nr-hrs{margin-left:auto;display:flex;gap:4px;align-items:center;font-size:11.5px;color:var(--gray)}
+.nr-hrs button{border:1px solid #cfe3e2;background:#fff;border-radius:8px;padding:2px 8px;font-size:11.5px;cursor:pointer;color:var(--gray)}
+.nr-hrs button.on{background:var(--primary);border-color:var(--primary);color:#fff}
+.nr-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 0;border-top:1px solid #f0f4f4;font-size:13px}
+.nr-row:first-of-type{border-top:0}
+.nr-row .nr-time{font-weight:800;min-width:72px}
+.nr-row .nr-name{font-weight:700;min-width:150px}
+.nr-row .nr-info{font-size:12px;color:var(--gray);flex:1;min-width:180px}
+.nr-row .nr-info b.late{color:#b23c3c}
+.nr-row .nr-act{display:flex;gap:6px;flex-wrap:wrap}
+.nr-row a.nr-call{background:var(--green-b);color:#fff;border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap}
+.nr-tag{font-size:10.5px;font-weight:700;border-radius:6px;padding:1px 6px;background:#eef4f4;color:var(--gray)}
+.nr-tag.vm{background:var(--purple);color:var(--purple-b)}
+.nr-tag.fin{background:var(--red);color:#b23c3c}
 .prio{display:flex;gap:10px;flex-wrap:wrap}
 .pcard{flex:1;min-width:130px;border:2px solid;border-radius:12px;text-align:center;padding:9px 8px;font-family:'Montserrat',sans-serif}
 .pcard b{display:block;font-size:14px;font-weight:800}
@@ -538,7 +559,7 @@ select.agent option{color:#1c2b33;background:#fff}
     <div class="hrow">
       <div class="brand">
         <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea">
-        <h1>Confirmation Hub 2.1.13 <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
+        <h1>Confirmation Hub 2.1.14 <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
       </div>
       <div class="hctl">
         <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">↻ Refresh</button>
@@ -547,7 +568,7 @@ select.agent option{color:#1c2b33;background:#fff}
       </div>
     </div>
     <div class="tabs">
-      <button id="tab-btn-board"    class="active" onclick="showTab('board')">📋 Day Board</button>
+      <button id="tab-btn-board"    class="active" onclick="showTab('board')">📋 Day Board <span class="badge-n" id="nr-left" style="display:none;background:#c0392b" title="Clients of today with no reply to the confirmation text"></span></button>
       <button id="tab-btn-timeline" onclick="showTab('timeline')">⏱ Timeline <span class="badge-n" id="tl-left"></span></button>
       <button id="tab-btn-week" onclick="showTab('week')">📅 Week</button>
       <button id="tab-btn-messages" onclick="showTab('messages')">✉ Messages</button>
@@ -573,6 +594,7 @@ select.agent option{color:#1c2b33;background:#fff}
     </div>
     <div class="daycap" id="daycap"></div>
     <div class="avail" id="avail"></div>
+    <div class="nr-panel" id="nr-panel" style="display:none"></div>
     <div id="board"></div>
   </div>
 
@@ -1402,6 +1424,7 @@ function refreshNow(){
   var b = document.getElementById('refresh-btn');
   b.textContent = '↻ Refreshing…';
   loadBoard();                                   /* Day Board + contadores */
+  loadNoReply(true);                             /* detector "sin respuesta" */
   if(TAB === 'week') loadWeek();                 /* Week: vuelve a leer los 6 días */
   if(TAB === 'timeline') renderLanes();          /* Timeline: recalcula tareas y cutoffs */
   if(TAB === 'replies') loadReplies();
@@ -1569,7 +1592,7 @@ function offGridRows(){
   return out.sort(function(a,b){ return slotMins(a.slot) - slotMins(b.slot); });
 }
 function renderBoard(){
-  renderAvail();
+  renderAvail(); renderNoReply();
   var html='';
   SLOTS[LOC_ID].forEach(function(slot){
     var s = slotStats(slot), count = s.target;
@@ -2447,7 +2470,7 @@ function closeImport(){ document.getElementById('import-modal').classList.remove
    Texts, normal rooms and default send times live in the Sheet (shared by every device).
    Sending, report schedule and status come from the script; secrets (tokens, keys) are never shown or editable here.
    ================================================================ */
-var HUB_EXPECTED_SERVER = '2.1.11';
+var HUB_EXPECTED_SERVER = '2.1.12';
 var APPCFG = (function(){ try{ return JSON.parse(localStorage.getItem('solea_appcfg')||'{}'); }catch(e){ return {}; } })();
 var MSG_ORIG = {}, LOC_ORIG = JSON.parse(JSON.stringify(LOCINFO));
 Object.keys(MESSAGES).forEach(function(id){ MSG_ORIG[id] = {en:MESSAGES[id].en, es:MESSAGES[id].es}; });
@@ -4782,6 +4805,116 @@ function fitHeader(){
 window.addEventListener('resize', fitHeader);
 window.addEventListener('load', fitHeader);
 
+/* ================================================================
+   NO-REPLY DETECTOR — today's clients who got a confirmation text, didn't answer,
+   and it's been at least nrHours() since that text. Call them before the system cancels.
+   Data: SENT (what went out and when, via ?action=sent) + REPLIES (RPL.raw, inbound only).
+   The hours (1 / 1.5 / 2 / 3) and the 30-min snooze are saved on this device only.
+   ================================================================ */
+var NR = {sent:{}, date:'', loadedAt:0, busy:false, open:true, err:'', view:[]};
+var NR_ASK_IDS = {nextday:1, leaving:1, gm:1, nodouble:1};    /* texts that ask the client to reply YES */
+var NR_FINAL_MIN = 60;                                         /* "Didn't double-confirm" gives the client 1 hour */
+function nrHours(){ var h = +localStorage.getItem('solea_nr_hours'); return (h >= 0.5 && h <= 6) ? h : 2; }
+function nrSetHours(h){ localStorage.setItem('solea_nr_hours', String(h)); renderNoReply(); }
+function nrSnoozed(){ try{ return JSON.parse(localStorage.getItem('solea_nr_snooze')||'{}'); }catch(e){ return {}; } }
+function nrSnooze(key, min){
+  var s = nrSnoozed(), now = Date.now();
+  Object.keys(s).forEach(function(k){ if(s[k] < now) delete s[k]; });
+  s[key] = now + min*60000; localStorage.setItem('solea_nr_snooze', JSON.stringify(s));
+  renderNoReply();
+}
+function nrToggle(){ NR.open = !NR.open; localStorage.setItem('solea_nr_open', NR.open ? '1' : '0'); renderNoReply(); }
+function loadNoReply(force){
+  if(!online() || !gsKey() || NR.busy) return;
+  var date = todayMiami();
+  if(!force && NR.date === date && Date.now() - NR.loadedAt < 110000) return;
+  NR.busy = true;
+  fetch(WEBAPP_URL+'?action=sent&date='+encodeURIComponent(date)+'&key='+encodeURIComponent(gsKey()))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.error){ NR.err = d.error; return; }
+      var last = {};
+      (d.sent||[]).forEach(function(x){
+        if(!NR_ASK_IDS[x.msgId] || !x.t) return;
+        var ms = Date.parse(x.t); if(!ms) return;
+        var cur = last[x.phone];
+        if(!cur || ms > cur.ms) last[x.phone] = {ms:ms, msgId:x.msgId, fin: x.msgId === 'nodouble' || !!(cur && cur.fin)};
+        else if(x.msgId === 'nodouble') cur.fin = true;
+      });
+      NR.sent = last; NR.date = date; NR.loadedAt = Date.now(); NR.err = '';
+    })
+    .catch(function(){ NR.err = 'offline'; })
+    .then(function(){ NR.busy = false; renderNoReply(); });
+}
+function nrAgo(ms){ var m = Math.max(0, Math.round((Date.now() - ms)/60000)); return m < 60 ? m+' min' : Math.floor(m/60)+' h'+(m%60 ? ' '+(m%60)+' min' : ''); }
+function nrClock(ms){ return new Date(ms).toLocaleTimeString('en-US',{timeZone:'America/New_York', hour:'numeric', minute:'2-digit'}); }
+function nrPhone(p){ return p.length === 10 ? '('+p.slice(0,3)+') '+p.slice(3,6)+'-'+p.slice(6) : p; }
+function nrList(){
+  var date = todayMiami(), out = {due:[], waiting:0, snoozed:0};
+  if(NR.date !== date) return out;
+  var lim = nrHours()*3600000, now = Date.now(), mn = miamiNow(), nowM = mn.getHours()*60 + mn.getMinutes();
+  var lastReply = {};
+  ((typeof RPL !== 'undefined' && RPL.raw) || []).forEach(function(m){ var t = Date.parse(m.t)||0; if(t > (lastReply[m.phone]||0)) lastReply[m.phone] = t; });
+  var snz = nrSnoozed(), seen = {};
+  localRoster(date).forEach(function(r){
+    if(!r.phone || seen[r.phone]) return;
+    if(DONE_STATUSES.indexOf(r.status) !== -1 || offBook(r.status)) return;   /* confirmed / canceled / moved … */
+    if(slotMins(r.slot) + 15 < nowM) return;                                   /* the appointment time already passed */
+    var s = NR.sent[r.phone]; if(!s) return;                                   /* no confirmation text went out through the hub */
+    if((lastReply[r.phone]||0) > s.ms) return;                                 /* she answered after the text → Replies tab */
+    seen[r.phone] = 1;
+    if(now - s.ms < lim){ out.waiting++; return; }
+    var key = date+'|'+r.loc+'|'+r.slot+'|'+r.idx;
+    if(snz[key] > now){ out.snoozed++; return; }
+    out.due.push({r:r, s:s, key:key});
+  });
+  return out;
+}
+function nrSet(i, st){
+  var e = NR.view[i]; if(!e) return;
+  setRosterStatus(todayMiami(), e.r.loc, e.r.slot, e.r.idx, st);
+  toast(e.r.client+' → '+st);
+  renderNoReply();
+}
+function renderNoReply(){
+  var el = document.getElementById('nr-panel'), badge = document.getElementById('nr-left');
+  if(!el) return;
+  var L = nrList(), n = L.due.length;
+  if(badge){ badge.textContent = n || ''; badge.style.display = n ? '' : 'none'; }
+  if(!online() || NR.date !== todayMiami() || (!n && !L.waiting && !L.snoozed)){ el.style.display = 'none'; return; }
+  NR.view = L.due;
+  var H = nrHours(), now = Date.now();
+  var sub = (n ? n+' to call' : 'nobody to call right now') + (L.waiting ? ' · '+L.waiting+' still inside the '+H+' h window' : '') + (L.snoozed ? ' · '+L.snoozed+' snoozed' : '');
+  var html = '<div class="nr-head" onclick="nrToggle()">'
+    + '<h2>📵 No reply '+(NR.open && n ? '▾' : '▸')+'</h2><span class="nr-sub">Today · both locations · '+sub+'</span>'
+    + '<span class="nr-hrs" onclick="event.stopPropagation()">after '
+    + [1,1.5,2,3].map(function(h){ return '<button class="'+(h===H?'on':'')+'" onclick="nrSetHours('+h+')">'+h+' h</button>'; }).join('')
+    + '</span></div>';
+  if(NR.open && n){
+    html += '<div style="margin-top:6px">' + L.due.map(function(e, i){
+      var r = e.r, s = e.s, fin = s.fin, dl = fin ? s.ms + NR_FINAL_MIN*60000 : 0;
+      var info = esc(MSG_LABEL[s.msgId]||s.msgId)+' sent '+nrClock(s.ms)+' · <b class="late">'+nrAgo(s.ms)+' without reply</b>'
+        + (fin ? ' · reply window '+(dl < now ? 'ended '+nrClock(dl) : 'ends '+nrClock(dl)) : '');
+      return '<div class="nr-row">'
+        + '<span class="nr-time">'+fmtTime(r.slot)+'</span>'
+        + '<span class="nr-name">'+esc(r.client)+' <span class="nr-tag">'+LOC_NAME[r.loc]+'</span>'
+        + (r.status === 'Left VM' ? ' <span class="nr-tag vm">VM left</span>' : r.status ? ' <span class="nr-tag">'+esc(r.status)+'</span>' : '')
+        + (fin ? ' <span class="nr-tag fin">final warning sent</span>' : '')+'</span>'
+        + '<span class="nr-info">'+info+'</span>'
+        + '<span class="nr-act">'
+        + '<a class="nr-call" href="tel:+1'+r.phone+'" title="Call '+esc(r.client)+'">📞 '+nrPhone(r.phone)+'</a>'
+        + '<button class="btn sm" style="background:var(--green);color:#2e7d55" onclick="nrSet('+i+',\'Confirmed\')">✓ Confirmed</button>'
+        + (r.status !== 'Left VM' ? '<button class="btn ghost sm" onclick="nrSet('+i+',\'Left VM\')">Left VM</button>' : '')
+        + '<button class="btn ghost sm" title="Hide for 30 minutes on this device" onclick="nrSnooze(\''+e.key+'\',30)">⏱ 30 min</button>'
+        + '</span></div>';
+    }).join('') + '</div>';
+  }
+  el.className = 'nr-panel' + (n ? '' : ' calm');
+  el.innerHTML = html;
+  el.style.display = '';
+}
+NR.open = localStorage.getItem('solea_nr_open') !== '0';
+
 /* ================= INIT (runs once the key is accepted) ================= */
 function bootApp(){
 applyAppCfg(APPCFG); loadAppCfg(); setInterval(loadAppCfg, 300000);
@@ -4796,6 +4929,8 @@ setTimeout(outboxFlush, 3000);   /* anything that failed to save last session go
 setInterval(tick, 5000);
 setTimeout(loadReplies, 1500);
 setInterval(refreshReplies, 60000);
+setTimeout(function(){ loadNoReply(true); }, 2500);
+setInterval(function(){ if(!document.hidden) loadNoReply(); }, 120000);
 setInterval(langScan, 15000);
 renderStationBtn();
 setTimeout(stationTick, 6000);
