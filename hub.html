@@ -25,7 +25,7 @@ h1,h2,h3{font-family:'Montserrat',Arial,sans-serif}
 /* HEADER */
 header{background:var(--dark);color:#fff;position:fixed;top:0;left:0;right:0;z-index:60;box-shadow:0 2px 14px rgba(0,0,0,.25)}
 body{padding-top:112px}   /* room for the fixed header (row + tabs) */
-@media(max-width:760px){body{padding-top:0}header{position:sticky}}   /* on phones the header wraps to several lines — let it flow */
+@media(max-width:760px){body{padding-top:0}header{position:sticky;top:0}}   /* on phones the header wraps to several lines — let it flow */
 .hrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:11px 0}
 .brand{display:flex;align-items:center;gap:12px}
 .brand img{height:34px}
@@ -72,6 +72,9 @@ body{padding-top:112px}   /* room for the fixed header (row + tabs) */
   .toast.show{bottom:calc(78px + env(safe-area-inset-bottom))}
 }
 @keyframes mspin{to{transform:rotate(360deg)}}
+/* phone-only elements: hidden on PC; wrappers that don't exist for the PC layout */
+.mstat,.mtg,.av .mt,.mline,.mnote,.thide,.tl-hidbtn{display:none}
+.ttask .tx,.ttask .txi{display:contents}
 .tabpane{display:none}
 .tabpane.active{display:block}
 
@@ -582,6 +585,87 @@ select.agent option{color:#1c2b33;background:#fff}
 @media(max-width:820px){.tpl-cols{grid-template-columns:1fr}}
 .tpl-cols textarea{width:100%;border:1px solid #dfeaea;border-radius:10px;padding:10px;font-family:'Roboto',Arial,sans-serif;font-size:13.5px;line-height:1.45;resize:vertical}
 .tpl-prev{font-size:13px;min-height:60px}
+/* ===== PHONE (≤760px) v2.2: full-width sticky header, compact board, client cards, collapsible Timeline ===== */
+@media(max-width:760px){
+  body{overflow-x:clip}
+  header{position:sticky;top:0;width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw)}
+  .brand h1 .hver{display:none}
+  /* board top bar: one row */
+  .boardbar{flex-wrap:nowrap;gap:6px;margin-top:10px}
+  .boardbar .blbl{display:none}
+  .boardbar .switch{flex:0 0 auto}
+  .boardbar .switch button{padding:8px 10px;font-size:12px}
+  .boardbar input[type=date]{flex:1 1 auto;min-width:0;width:0;padding:7px 8px;font-size:12.5px}
+  .boardbar .btn.sm{flex:0 0 auto;width:38px;height:38px;padding:0;font-size:16px;border-radius:12px}
+  .boardbar .sync{display:none}
+  /* day capacity: one thin line */
+  .daycap{margin-top:8px;padding:4px 10px;font-size:12px;border-width:1.5px;border-radius:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .daycap .big{font-size:14px;margin-right:3px}
+  /* availability: small pills */
+  .avail{gap:5px;margin:7px 0 4px}
+  .av{flex:0 0 auto;min-width:0;padding:2px 9px;border-width:1.5px;border-radius:12px}
+  .av .t,.av .n,.av .free{display:none}
+  .av .mt{display:block;font-family:'Montserrat',sans-serif;font-weight:800;font-size:12px;white-space:nowrap}
+  /* slot header: one line */
+  .slot{margin:10px 0;border-radius:12px}
+  .slot-head{flex-wrap:nowrap;gap:8px;padding:6px 10px}
+  .slot-head .time{font-size:14.5px;white-space:nowrap}
+  .slot-head .stat{display:none}
+  .slot-head .mstat{display:inline;font-size:12px;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .slot-head .tgt{gap:2px;flex:0 0 auto}
+  .slot-head .tgt .tlb{display:none}
+  .slot-head .tgt .mtg{display:inline;font-style:normal;font-size:13px}
+  .slot-head .tgt input{width:34px;padding:4px 2px;min-height:30px}
+  /* client card: 2 lines + optional note, colour stripe by status */
+  .drow{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;padding:7px 10px 7px 10px;border-top:1px solid #e6eeee;border-left:4px solid var(--stc,var(--blue-b))}
+  .drow > .dtag,.drow > .dep,.drow > .dnote,.drow > .blockbtn.ed{display:none}
+  .drow .dname{flex:1 1 0;min-width:0;font-size:15px}
+  .drow > select{flex:0 0 auto;width:auto;max-width:44%;min-height:40px;font-size:12.5px;padding:6px 4px}
+  .drow .mline{display:flex;flex-basis:100%;align-items:center;gap:8px;min-width:0}
+  .drow .mph{font-size:13px;font-weight:700;color:var(--primary-dark);text-decoration:none;white-space:nowrap;padding:8px 0}
+  .drow .mph.none{color:#b5c3c3;font-weight:500}
+  .drow .mic{font-size:16px;white-space:nowrap;line-height:1}
+  .drow .mflag{margin-left:3px}
+  .drow .mdep{position:relative;flex:0 0 auto;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border:1px solid #e3eaea;border-radius:10px;background:#fff;cursor:pointer}
+  .drow .mdep input{position:absolute;inset:0;width:100%;height:100%;opacity:0;margin:0;cursor:pointer}
+  .drow .mdep span{font-size:18px;filter:grayscale(1);opacity:.3}
+  .drow .mdep.on{background:var(--green);border-color:var(--green-b)}
+  .drow .mdep.on span{filter:none;opacity:1}
+  .drow .msrc{font-size:10.5px;padding:1px 7px;min-width:0;flex:0 1 auto}
+  .drow .mline .ed{margin-left:auto;flex:0 0 auto;width:40px;height:40px;font-size:16px;border-radius:10px}
+  .drow .mnote{display:block;flex-basis:100%;font-size:11.5px;font-style:italic;color:var(--gray);line-height:1.3;padding-bottom:2px}
+  .drow .ogtime{margin-right:4px}
+  /* empty / blocked rooms: one thin line */
+  .drow.empty,.drow.blocked{display:flex;flex-wrap:nowrap;padding:2px 6px 2px 10px;border-left-color:transparent;gap:6px;min-height:0}
+  .drow.empty .dname,.drow.blocked .dname{flex:1;font-size:12px}
+  .drow.empty .dopen{display:flex;align-items:center;justify-content:center;width:36px;height:34px;font-size:17px}
+  .drow .dopen .blbl{display:none}
+  .drow.empty .blockbtn,.drow.blocked .blockbtn{width:34px;height:30px}
+  .drow.blocked{border-left-color:#1c2b33}
+  /* Timeline: compact tasks, tap to open */
+  .lanes{gap:12px;margin-top:12px}
+  .lane-body{padding:8px}
+  .ttask{gap:10px;padding:9px 8px;margin-bottom:4px;cursor:pointer;align-items:flex-start}
+  .ttask input[type=checkbox]{width:22px;height:22px;margin-top:0;flex:0 0 auto}
+  .ttask .t{min-width:40px;font-size:12.5px;padding-top:2px}
+  .ttask .bd{min-width:0}
+  .ttask .title{font-size:13.5px;line-height:1.35}
+  .ttask .tx{display:grid;grid-template-rows:0fr;transition:grid-template-rows .2s ease}
+  .ttask .txi{display:block;overflow:hidden;min-height:0}
+  .ttask.open .tx{grid-template-rows:1fr}
+  .ttask .desc{margin-top:4px}
+  .ttask .acts .act{padding:8px 13px;font-size:12px}
+  .ttask .thide{display:inline-block;margin:8px 0 2px;background:none;border:1px solid #d5e0e0;border-radius:12px;padding:6px 12px;font-size:12px;color:var(--gray);cursor:pointer}
+  .ttask.done{opacity:.5}
+  .ttask.done.open{opacity:.85}
+  .ttask.hid{display:none}
+  .showhid .ttask.hid{display:flex;opacity:.55}
+  .tl-hidbtn{display:block;width:100%;margin-top:6px;background:#f2f7f7;border:1px dashed #cfe3e2;border-radius:10px;padding:9px;font-size:12.5px;font-weight:700;color:var(--gray);cursor:pointer}
+}
+@media(max-width:760px) and (prefers-reduced-motion:reduce){
+  .ttask .tx{transition:none}
+  .ttask.current{animation:none}
+}
 </style>
 </head>
 <body>
@@ -608,23 +692,23 @@ select.agent option{color:#1c2b33;background:#fff}
     <div class="hrow">
       <div class="brand">
         <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea">
-        <h1>Confirmation Hub 2.1.20 <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
+        <h1 title="Confirmation Hub 2.2.0">Confirmation Hub <span class="hver">2.2.0</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
       </div>
       <div class="hctl">
-        <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">↻ Refresh</button>
+        <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">🔄 Refresh</button>
         <div class="clock"><div class="time" id="clock">--:--</div><div class="date" id="cdate">Miami</div></div>
-        <button class="hbtn" id="settings-btn" onclick="openSettings()" title="Settings">⚙ Settings</button>
+        <button class="hbtn" id="settings-btn" onclick="openSettings()" title="Settings">⚙️ Settings</button>
       </div>
     </div>
     <div class="tabs">
       <button id="tab-btn-board"    class="active" onclick="showTab('board')" title="Day Board"><i class="ti">📋</i><span class="tlbl"> Day Board</span> <span class="badge-n" id="nr-left" style="display:none;background:#c0392b" title="Clients of today with no reply to the confirmation text"></span></button>
-      <button id="tab-btn-timeline" onclick="showTab('timeline')" title="Timeline"><i class="ti">⏱</i><span class="tlbl"> Timeline</span> <span class="badge-n" id="tl-left"></span></button>
+      <button id="tab-btn-timeline" onclick="showTab('timeline')" title="Timeline"><i class="ti">⏱️</i><span class="tlbl"> Timeline</span> <span class="badge-n" id="tl-left"></span></button>
       <button id="tab-btn-week" onclick="showTab('week')" title="Week"><i class="ti">📅</i><span class="tlbl"> Week</span></button>
-      <button id="tab-btn-messages" onclick="showTab('messages')" title="Messages"><i class="ti">✉</i><span class="tlbl"> Messages</span></button>
+      <button id="tab-btn-messages" onclick="showTab('messages')" title="Messages"><i class="ti">✉️</i><span class="tlbl"> Messages</span></button>
       <button id="tab-btn-replies" onclick="showTab('replies')" title="Replies"><i class="ti">💬</i><span class="tlbl"> Replies</span> <span class="badge-n" id="rp-left" style="display:none"></span></button>
       <!-- phone only: Refresh + Settings move to the bottom bar -->
-      <button class="m-only" id="m-refresh" onclick="refreshNow()" title="Refresh" aria-label="Refresh"><i class="ti">↻</i></button>
-      <button class="m-only" onclick="openSettings()" title="Settings" aria-label="Settings"><i class="ti">⚙</i></button>
+      <button class="m-only" id="m-refresh" onclick="refreshNow()" title="Refresh" aria-label="Refresh"><i class="ti">🔄</i></button>
+      <button class="m-only" onclick="openSettings()" title="Settings" aria-label="Settings"><i class="ti">⚙️</i></button>
     </div>
   </div>
 </header>
@@ -636,12 +720,12 @@ select.agent option{color:#1c2b33;background:#fff}
     <div id="setup">⚙ <b>Not connected yet.</b> Paste your Apps Script Web-App URL into <code>WEBAPP_URL</code> at the top of the script. Until then everything runs in <b>local mode</b> — data stays in this browser only.</div>
     <div class="boardbar">
       <div class="switch" style="border-color:#cfe3e2">
-        <button id="trk-same" class="active" onclick="setTrack('same')" style="color:var(--gray)">Same-Day</button>
-        <button id="trk-next" onclick="setTrack('next')" style="color:var(--gray)">Next-Day</button>
+        <button id="trk-same" class="active" onclick="setTrack('same')" style="color:var(--gray)">Same<span class="blbl">-Day</span></button>
+        <button id="trk-next" onclick="setTrack('next')" style="color:var(--gray)">Next<span class="blbl">-Day</span></button>
       </div>
       <input type="date" id="bdate" onchange="loadBoard()">
-      <button class="btn primary sm" onclick="openRoster()">✎ Edit roster</button>
-      <button class="btn gold sm" onclick="openReport()">📊 Report</button>
+      <button class="btn primary sm" onclick="openRoster()" title="Edit roster" aria-label="Edit roster">✎<span class="blbl"> Edit roster</span></button>
+      <button class="btn gold sm" onclick="openReport()" title="Report" aria-label="Report">📊<span class="blbl"> Report</span></button>
       <div class="sync"><div class="dot" id="sync-dot"></div><span id="sync-txt">local mode</span></div>
     </div>
     <div class="daycap" id="daycap"></div>
@@ -1475,7 +1559,7 @@ function setSync(cls, txt){
 }
 function refreshNow(){
   var b = document.getElementById('refresh-btn'), mb = document.getElementById('m-refresh');
-  b.textContent = '↻ Refreshing…';
+  b.textContent = '🔄 Refreshing…';
   if(mb){ mb.classList.add('spin'); setTimeout(function(){ mb.classList.remove('spin'); }, 1200); }
   loadBoard();                                   /* Day Board + contadores */
   loadNoReply(true);                             /* detector "sin respuesta" */
@@ -1487,7 +1571,7 @@ function refreshNow(){
   setTimeout(function(){
     b.textContent = online() ? '✓ Up to date' : '✓ Reloaded (local)';
     b.classList.add('done');
-    setTimeout(function(){ b.textContent='↻ Refresh'; b.classList.remove('done'); },1500);
+    setTimeout(function(){ b.textContent='🔄 Refresh'; b.classList.remove('done'); },1500);
   }, online()?700:250);
 }
 var loadSeq = 0;
@@ -1624,7 +1708,7 @@ function renderAvail(){
     dayCap+=s.cap; dayBooked+=s.booked; dayFree+=s.free; dayBlocked+=s.blocked;
     var cls = s.cap===0?'blocked':(s.free===0?'full':(s.free===1?'tight':'good'));
     var label = s.cap===0?'CLOSED':(s.free===0?'FULL':s.free+' free');
-    html += '<div class="av '+cls+'"><div class="t">'+slot+'</div><div class="n">'+s.booked+'/'+s.cap+' booked'+(s.blocked?' · '+s.blocked+'⬛':'')+'</div><div class="free">'+label+'</div></div>';
+    html += '<div class="av '+cls+'"><div class="mt">'+slot+' · '+(s.cap===0?'⬛':(s.free===0?'Full':s.free))+'</div><div class="t">'+slot+'</div><div class="n">'+s.booked+'/'+s.cap+' booked'+(s.blocked?' · '+s.blocked+'⬛':'')+'</div><div class="free">'+label+'</div></div>';
   });
   document.getElementById('avail').innerHTML = html;
   /* off-grid consults (odd times like 12:00 in Brickell) count as booked, but not against slot capacity */
@@ -1659,7 +1743,8 @@ function renderBoard(){
       + '<span class="time">'+slot+'</span>'
       + '<span class="stat">'+s.booked+' booked · '+s.confirmed+' confirmed · '+s.blocked+' blocked'
       + (over ? ' · <b class="over-pill">⚠ '+over+' over — move with add-on</b>' : '')+'</span>'
-      + '<span class="tgt">Rooms <input type="number" min="0" max="12" value="'+s.target+'"'+(dayRoomsGet(bdate(), LOC_ID)!=null?' disabled title="This day has its own rooms rule — change it in ⚙ Settings → Rooms per day"':'')+' onchange="setTarget(\''+slot+'\', this.value)"></span>'
+      + '<span class="mstat">'+s.booked+'/'+s.cap+' · '+s.confirmed+' ✓'+(s.blocked?' · '+s.blocked+' blocked':'')+(over?' · <b class="over-pill">⚠ '+over+' over</b>':'')+'</span>'
+      + '<span class="tgt"><span class="tlb">Rooms</span><i class="mtg" aria-hidden="true">⚙</i><input type="number" min="0" max="12" value="'+s.target+'"'+(dayRoomsGet(bdate(), LOC_ID)!=null?' disabled title="This day has its own rooms rule — change it in ⚙ Settings → Rooms per day"':'')+' onchange="setTarget(\''+slot+'\', this.value)"></span>'
       + '</div>';
     for(var i=0;i<count;i++){
       var r = rows[slot+'|'+i] || {client:'',source:'',notes:'',status:'',blocked:false};
@@ -1677,20 +1762,21 @@ function renderBoard(){
       if(!booked){
         html += '<div class="drow empty' + (i>=s.target?' extra':'') + '">'
           + '<span class="dname">— open —</span>'
-          + '<span class="dopen" onclick="openRoster(bdate())">＋ add client</span>'
+          + '<span class="dopen" onclick="openRoster(bdate())" title="Add client" aria-label="Add client">＋<span class="blbl"> add client</span></span>'
           + '<button class="blockbtn" title="Block this room" onclick="toggleBlock(\''+slot+'\','+i+')">▢</button></div>';
         continue;
       }
       /* booked client — read-only, except status + deposit which stay one-click */
-      html += '<div class="drow'+(i>=s.target?' extra':'')+'">'
+      html += '<div class="drow'+(i>=s.target?' extra':'')+mStCls(r)+'">'
         + '<span class="dname" title="Edit in the roster" onclick="openRoster(bdate())">'+replyBadge(m.phone)+newBadge(r)+esc(r.client)+histBadge(m.phone)+'</span>'
         + '<span class="dtag src '+(SRC_CLS[r.source]||'')+'">'+esc(r.source||'—')+'</span>'
         + '<span class="dtag">'+m.type+' · '+m.lang+lsugBadge(m, slot, i)+'</span>'
         + '<label class="dep'+(m.dep?' on':'')+'" title="Deposit paid"><input type="checkbox" '+(m.dep?'checked':'')
           + ' onchange="edit(\''+slot+'\','+i+',\'dep\', this.checked)"><span>$</span></label>'
         + '<span class="dnote" title="'+esc(dnoteTxt(m))+'">'+dnoteHtml(m)+'</span>'
-        + sel(STATUSES, r.status, ST_CLS[r.status]||'', slot, i, 'status', '— status —')
+        + sel(STATUSES, r.status, ST_CLS[r.status]||'', slot, i, 'status', stBlank())
         + '<button class="blockbtn ed" title="Edit in the roster" onclick="openRoster(bdate())">✎</button>'
+        + mLine(m, r, slot, i)
         + '</div>';
     }
     html += '</div>';
@@ -1705,15 +1791,16 @@ function renderBoard(){
     og.forEach(function(r){
       var m = {lang:/#ES/.test(r.notes||'')?'ES':'EN', type:/#BODY/.test(r.notes||'')?'Body':'Face',
                dep:/#DEP/.test(r.notes||''), phone:((r.notes||'').match(/#TEL(\d+)/)||[])[1]||'', lsug:lsugOf(r.notes||''), lock:/#LLOCK/.test(r.notes||''), plain:(r.notes||'').replace(TAG_RE,'').trim()};
-      html += '<div class="drow">'
+      html += '<div class="drow'+mStCls(r)+'">'
         + '<span class="dname" onclick="openRoster(bdate())"><span class="ogtime">'+fmtTime(r.slot)+'</span> '+replyBadge(m.phone)+newBadge(r)+esc(r.client)+histBadge(m.phone)+'</span>'
         + '<span class="dtag src '+(SRC_CLS[r.source]||'')+'">'+esc(r.source||'—')+'</span>'
         + '<span class="dtag">'+m.type+' · '+m.lang+lsugBadge(m, r.slot, r.idx)+'</span>'
         + '<label class="dep'+(m.dep?' on':'')+'" title="Deposit paid"><input type="checkbox" '+(m.dep?'checked':'')
           + ' onchange="edit(\''+r.slot+'\','+r.idx+',\'dep\', this.checked)"><span>$</span></label>'
         + '<span class="dnote" title="'+esc(dnoteTxt(m))+'">'+dnoteHtml(m)+'</span>'
-        + sel(STATUSES, r.status, ST_CLS[r.status]||'', r.slot, r.idx, 'status', '— status —')
+        + sel(STATUSES, r.status, ST_CLS[r.status]||'', r.slot, r.idx, 'status', stBlank())
         + '<button class="blockbtn ed" title="Edit in the roster" onclick="openRoster(bdate())">✎</button>'
+        + mLine(m, r, r.slot, r.idx)
         + '</div>';
     });
     html += '</div>';
@@ -1727,6 +1814,36 @@ function sel(opts, val, cls, slot, i, field, blank){
     + opts.map(function(o){ return '<option value="'+esc(o)+'"'+(o===val?' selected':'')+'>'+esc(o||blank)+'</option>'; }).join('')
     + '</select>';
 }
+/* ---------- phone view helpers (only visible ≤760px; on PC these elements are display:none) ---------- */
+var MOB_MQ = window.matchMedia ? window.matchMedia('(max-width:760px)') : null;
+function isMobile(){ return !!(MOB_MQ && MOB_MQ.matches); }
+function stBlank(){ return isMobile() ? 'Pending' : '— status —'; }
+function mStCls(r){ return ' rz-'+(ST_CLS[r.status] || 'st-none'); }        /* left colour stripe on phones (--stc) */
+function mLine(m, r, slot, i){
+  var ph = m.phone ? '<a class="mph" href="tel:+1'+esc(m.phone)+'" title="Call">'+fmtPhone(m.phone)+'</a>' : '<span class="mph none">no phone</span>';
+  return '<div class="mline">' + ph
+    + '<span class="mic" title="'+m.type+' · '+(m.lang==='ES'?'Spanish':'English')+'">'+(m.type==='Body'?'💪':'🧖')+'<span class="mflag">'+(m.lang==='ES'?'🇪🇸':'🇺🇸')+'</span></span>'+lsugBadge(m, slot, i)
+    + '<label class="mdep'+(m.dep?' on':'')+'" title="Deposit paid" aria-label="Deposit paid"><input type="checkbox" '+(m.dep?'checked':'')
+      + ' onchange="edit(\''+slot+'\','+i+',\'dep\', this.checked)"><span>💲</span></label>'
+    + '<span class="dtag src msrc '+(SRC_CLS[r.source]||'')+'">'+esc(r.source||'—')+'</span>'
+    + '<button class="blockbtn ed med" title="Edit in the roster" aria-label="Edit in the roster" onclick="openRoster(bdate())">✎</button>'
+    + '</div>' + (m.plain ? '<div class="mnote">'+esc(m.plain)+'</div>' : '');
+}
+/* GHL wraps the hub in a section with top padding + white background: on phones, clear them on our ancestors */
+function mobileFit(){
+  if(!isMobile()) return;
+  var h = document.querySelector('header'); if(!h) return;
+  for(var el = h.parentElement; el && el !== document.body && el !== document.documentElement; el = el.parentElement){
+    el.style.paddingTop = '0'; el.style.marginTop = '0'; el.style.background = 'transparent';
+    try{ var cs = getComputedStyle(el); if(cs.overflowX !== 'visible' || cs.overflowY !== 'visible') el.style.overflow = 'visible'; }catch(e){}   /* sticky header needs it */
+  }
+  document.body.style.marginTop = '0';
+}
+if(MOB_MQ){
+  var onMq = function(){ mobileFit(); try{ if(TAB === 'board') renderBoard(); renderLanes(); }catch(e){} };
+  if(MOB_MQ.addEventListener) MOB_MQ.addEventListener('change', onMq); else if(MOB_MQ.addListener) MOB_MQ.addListener(onMq);
+}
+mobileFit();
 function renderLaneCounts(){
   /* cache only — never hits the network (this runs after every edit) */
   ['same','next'].forEach(function(tr){
@@ -1778,7 +1895,21 @@ next: [
 
 function dayKey(){ var d=miamiNow(); return 'solea_tl_'+d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function getChecks(){ try{ return JSON.parse(localStorage.getItem(dayKey())||'{}'); }catch(e){ return {}; } }
-function setCheck(id,v){ var c=getChecks(); c[id]=v; localStorage.setItem(dayKey(), JSON.stringify(c)); renderLanes(); }
+function setCheck(id,v){ var c=getChecks(); c[id]=v; localStorage.setItem(dayKey(), JSON.stringify(c)); if(v) TLOPEN[id] = false; renderLanes(); }
+/* phone Timeline: tap a task to open/close it · hide tasks (kept on this device) · "Show hidden (N)" per lane */
+var TLOPEN = {}, TLSHOW = {};
+function tlHiddenGet(){ try{ return JSON.parse(localStorage.getItem('solea_tl_hidden')||'{}') || {}; }catch(e){ return {}; } }
+function tlHide(id, on){
+  var h = tlHiddenGet(); if(on) h[id] = 1; else delete h[id];
+  try{ localStorage.setItem('solea_tl_hidden', JSON.stringify(h)); }catch(e){}
+  renderLanes();
+}
+function tlShowHidden(tr){ TLSHOW[tr] = !TLSHOW[tr]; renderLanes(); }
+function tlTap(el, ev){
+  if(!isMobile()) return;
+  var t = ev && ev.target; if(t && t.closest && t.closest('input,button,a,.act,select,label')) return;
+  var on = !el.classList.contains('open'); el.classList.toggle('open', on); TLOPEN[el.getAttribute('data-id')] = on;
+}
 function resetDay(){ localStorage.removeItem(dayKey()); renderLanes(); }
 function taskById(id){
   var found=null;
@@ -1797,7 +1928,7 @@ function renderLanes(){
   var now = miamiNow(), nowM = now.getHours()*60+now.getMinutes();
   var checks = getChecks(), left = 0;
   ['same','next'].forEach(function(tr){
-    var tasks = TL[tr], cur=-1, html='';
+    var tasks = TL[tr], cur=-1, html='', hid = tlHiddenGet(), nHid = 0;
     for(var i=0;i<tasks.length;i++){ if(nowM>=mins(tasks[i].t)) cur=i; }
     tasks.forEach(function(tk,i){
       var cls='ttask';
@@ -1806,13 +1937,20 @@ function renderLanes(){
       if(i===cur) cls+=' current';
       if(checks[tk.id]) cls+=' done';
       if(!checks[tk.id] && mins(tk.t)<=nowM) left++;
-      html += '<div class="'+cls+'">'
+      var isHid = !!hid[tk.id]; if(isHid){ nHid++; cls += ' hid'; }
+      var open = TLOPEN[tk.id]; if(open === undefined) open = (i===cur && !checks[tk.id]);
+      if(open) cls += ' open';
+      html += '<div class="'+cls+'" data-id="'+tk.id+'" onclick="tlTap(this, event)">'
         + '<input type="checkbox" '+(checks[tk.id]?'checked':'')+' onchange="setCheck(\''+tk.id+'\', this.checked)">'
         + '<div class="t">'+tk.t+'</div>'
-        + '<div class="bd"><div class="title">'+tk.title+'</div><div class="desc">'+tk.desc+'</div>'+actButtons(tk)+'</div>'
+        + '<div class="bd"><div class="title">'+tk.title+'</div><div class="tx"><div class="txi"><div class="desc">'+tk.desc+'</div>'+actButtons(tk)
+        + '<button class="thide" onclick="tlHide(\''+tk.id+'\','+(isHid?'false':'true')+')">'+(isHid?'👁 Unhide':'🙈 Hide')+'</button></div></div></div>'
         + '</div>';
     });
-    document.getElementById('lane-'+tr).innerHTML = html;
+    if(nHid) html += '<button class="tl-hidbtn" onclick="tlShowHidden(\''+tr+'\')">'+(TLSHOW[tr] ? 'Hide them again' : 'Show hidden ('+nHid+')')+'</button>';
+    var laneEl = document.getElementById('lane-'+tr);
+    laneEl.innerHTML = html;
+    laneEl.classList.toggle('showhid', !!TLSHOW[tr]);
   });
   var tl = document.getElementById('tl-left');
   tl.textContent = left ? left : '';
@@ -2967,7 +3105,7 @@ function statRow(state, label, detail){
 }
 function renderStatus(){
   var el = byId('settings-status'), d = STATUS || {}, rows = '';
-  var hubVer = (document.querySelector('.brand h1').childNodes[0].textContent || '').trim();
+  var hvEl = document.querySelector('.brand h1 .hver'), hubVer = 'Confirmation Hub ' + (hvEl ? hvEl.textContent : '');
   if(d.offline){ rows += statRow(false, 'Script', 'Could not reach the server'); }
   else if(!d.serverVersion){ rows += statRow(null, 'Script', 'Older version — update it with the latest Code.gs'); }
   else {
