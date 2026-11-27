@@ -369,6 +369,7 @@ input[type=date]{background:#fff;border:1px solid #dfeaea;color:var(--dark);bord
 .imp-note{font-size:12.5px;color:var(--gray);background:var(--light);border-radius:10px;padding:8px 12px;margin:8px 0}
 .callout-stop{background:var(--red);border:2px solid var(--red-b);color:#8f2f2f;border-radius:12px;padding:10px 14px;font-size:13.5px;margin:8px 0}
 tr.imp-exists td{opacity:.55}
+tr.imp-exists.imp-act td{opacity:1}
 tr.imp-new td b{color:#1c6b46}
 tr.imp-dup td{background:var(--orange)}
 tr.imp-moved td{background:#fff3d6}
@@ -581,7 +582,7 @@ select.agent option{color:#1c2b33;background:#fff}
     <div class="hrow">
       <div class="brand">
         <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea">
-        <h1>Confirmation Hub 2.1.18 <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
+        <h1>Confirmation Hub 2.1.19 <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
       </div>
       <div class="hctl">
         <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">↻ Refresh</button>
@@ -2293,9 +2294,13 @@ function parseVagaroAOA(aoa){
     var w = parseVagaroWhen(row[col.when]);
     if(!w || !w.slot){ unread++; continue; }
     out.push({full:String(row[col.name]).trim(), name:cleanName(row[col.name]), date:w.date, slot:w.slot,
-              service: col.service>=0 ? String(row[col.service]||'') : ''});
+              service: col.service>=0 ? String(row[col.service]||'') : '', conf: status === 'confirmed'});
   }
-  return {rows:out, skipped:skipped, unread:unread};
+  /* "Confirmed - Appointments Summary" = only confirmed clients · "Accepted - ..." = only those not confirmed yet */
+  var title = aoa.slice(0, hdrIdx).map(function(r){ return (r||[]).join(' '); }).join(' ');
+  var confOnly = /\bconfirmed\b/i.test(title) || (!!out.length && !skipped && out.every(function(r){ return r.conf; }));
+  var accOnly = !confOnly && /\baccepted\b/i.test(title);
+  return {rows:out, skipped:skipped, unread:unread, confOnly:confOnly, accOnly:accOnly};
 }
 function loadSheetJS(){
   if(window.XLSX) return Promise.resolve();
@@ -2344,6 +2349,24 @@ function sameClient(a,b){
   }
   return true;
 }
+/* "Benjamin Miler" vs "Benjamin Miller": same words, each at most 1 letter different (2 if long), at least one identical */
+function nameTypo(a, b){
+  var x = nameTokens(a), y = nameTokens(b);
+  if(x.length < 2 || x.length !== y.length) return false;
+  function dist(s, t){
+    var p = [], i, j; for(j=0;j<=t.length;j++) p[j] = j;
+    for(i=1;i<=s.length;i++){ var q = [i]; for(j=1;j<=t.length;j++) q[j] = Math.min(p[j]+1, q[j-1]+1, p[j-1]+(s[i-1]===t[j-1]?0:1)); p = q; }
+    return p[t.length];
+  }
+  var diff = 0;
+  for(var i=0;i<x.length;i++){
+    if(x[i] === y[i]) continue;
+    var mn = Math.min(x[i].length, y[i].length);
+    if(mn < 3 || dist(x[i], y[i]) > (mn >= 8 ? 2 : 1)) return false;
+    diff++;
+  }
+  return diff > 0 && diff < x.length;
+}
 /* the file's name has more of the client's name than the roster does */
 function isLessComplete(onRoster, inFile){
   var x = nameTokens(onRoster), y = nameTokens(inFile);
@@ -2366,7 +2389,7 @@ function importPrepare(parsed){
     });
   });
   IMP.rows = parsed.rows.map(function(r){
-    return {name:r.name, full:r.full, date:r.date, slot:r.slot, grid:isGridSlot(loc, r.slot), state:'', note:'', upgrade:null};
+    return {name:r.name, full:r.full, date:r.date, slot:r.slot, conf:!!r.conf, grid:isGridSlot(loc, r.slot), state:'', note:'', upgrade:null, toConf:null, conflict:''};
   });
   /* repeated rows inside the file itself */
   var seen = {};
@@ -2374,17 +2397,23 @@ function importPrepare(parsed){
     var key = r.date+'|'+r.slot+'|'+nameFull(r.name);
     if(seen[key]) r.state = 'dup'; else seen[key] = true;
   });
-  /* one file row ↔ one roster row: first identical full names, then compatible names (first name / initial) */
+  /* one file row ↔ one roster row: identical full names, then compatible names (first name / initial), then a 1-letter typo (same time) */
   var used = {};
-  [true,false].forEach(function(exact){
+  [1,2,3].forEach(function(pass){
     IMP.rows.forEach(function(r){
       if(r.state) return;
       for(var i=0;i<existing.length;i++){
         var e = existing[i];
         if(used[i] || e.date!==r.date || e.slot!==r.slot) continue;
-        if(!(exact ? nameFull(e.client)===nameFull(r.name) : sameClient(e.client, r.name))) continue;
+        if(!(pass===1 ? nameFull(e.client)===nameFull(r.name) : pass===2 ? sameClient(e.client, r.name) : nameTypo(e.client, r.name))) continue;
         used[i] = true; r.state = 'exists';
-        if(isLessComplete(e.client, r.name)) r.upgrade = {slot:e.slot, idx:e.idx, from:e.client};
+        if(pass === 3 || isLessComplete(e.client, r.name)) r.upgrade = {slot:e.slot, idx:e.idx, from:e.client};
+        /* Confirmed in Vagaro: pending / Left VM / own "pending" status -> Confirmed; Canceled, No-show... -> only a warning */
+        if(r.conf){
+          var st = e.status || '';
+          if(DONE_STATUSES.indexOf(st) === -1) r.toConf = {slot:e.slot, idx:e.idx, from:st || 'pending'};
+          else if(CONFIRMED_STATUSES.indexOf(st) === -1) r.conflict = st;
+        }
         return;
       }
     });
@@ -2399,8 +2428,9 @@ function importPrepare(parsed){
     else r.state = 'new';
   });
   /* on the roster for those dates, but not in the file (any time that day) */
-  IMP.missing = existing.filter(function(x,i){
-    return !used[i] && !offBook(x.status) && !IMP.rows.some(function(r){ return r.date===x.date && sameClient(r.name, x.client); });
+  IMP.confOnly = !!parsed.confOnly; IMP.accOnly = !!parsed.accOnly;
+  IMP.missing = IMP.confOnly ? [] : existing.filter(function(x,i){       /* the Confirmed report lists only the confirmed ones */
+    return !used[i] && !offBook(x.status) && !(IMP.accOnly && CONFIRMED_STATUSES.indexOf(x.status) !== -1) && !IMP.rows.some(function(r){ return r.date===x.date && sameClient(r.name, x.client); });
   });
   IMP.skipped = parsed.skipped; IMP.unread = parsed.unread;
   renderImport();
@@ -2413,16 +2443,20 @@ function renderImport(){
   var dupN = IMP.rows.filter(function(r){ return r.state==='dup'; }).length;
   var movN = IMP.rows.filter(function(r){ return r.state==='moved'; }).length;
   var updN = IMP.rows.filter(function(r){ return !!r.upgrade; }).length;
+  var confN = IMP.rows.filter(function(r){ return r.toConf || (r.state==='new' && r.conf); }).length;
+  var cflN = IMP.rows.filter(function(r){ return r.conflict; }).length;
   var offN = IMP.rows.filter(function(r){ return !r.grid; }).length;
   var otherGrid = IMP.rows.filter(function(r){ return !r.grid && isGridSlot(other, r.slot); }).length;
   var wrongFile = IMP.rows.length >= 4 && otherGrid > IMP.rows.length/2;
   var dates = {}; IMP.rows.forEach(function(r){ dates[r.date]=true; }); var dl = Object.keys(dates).sort();
 
-  document.getElementById('imp-title').textContent = 'Import → ' + LOC_NAME[loc] + ' · ' + IMP.fileName;
+  document.getElementById('imp-title').textContent = 'Import → ' + LOC_NAME[loc] + ' · ' + IMP.fileName + (IMP.confOnly ? ' · Confirmed report' : IMP.accOnly ? ' · Accepted report' : '');
   var html = '<div class="rep-tot">'
     + '<div class="rep-chip g"><b>'+newN+'</b><span>New</span></div>'
     + '<div class="rep-chip"><b>'+exN+'</b><span>Already in</span></div>'
-    + (updN ? '<div class="rep-chip g"><b>'+updN+'</b><span>Full names</span></div>' : '')
+    + (updN ? '<div class="rep-chip g"><b>'+updN+'</b><span>Names fixed</span></div>' : '')
+    + (confN ? '<div class="rep-chip g"><b>'+confN+'</b><span>→ Confirmed</span></div>' : '')
+    + (cflN ? '<div class="rep-chip r"><b>'+cflN+'</b><span>Conflict</span></div>' : '')
     + (dupN ? '<div class="rep-chip o"><b>'+dupN+'</b><span>Dup in file</span></div>' : '')
     + (movN ? '<div class="rep-chip o"><b>'+movN+'</b><span>Time changed?</span></div>' : '')
     + '<div class="rep-chip"><b>'+offN+'</b><span>Off-grid</span></div>'
@@ -2431,17 +2465,22 @@ function renderImport(){
     + (IMP.unread ? '<div class="rep-chip r"><b>'+IMP.unread+'</b><span>Unreadable</span></div>' : '')
     + '</div>';
   if(wrongFile) html += '<div class="callout-stop">⚠ Most of these times match <b>'+LOC_NAME[other]+'</b>\'s schedule, not '+LOC_NAME[loc]+'\'s. Wrong file for this location? Close, switch location, import again.</div>';
-  html += '<div class="imp-note">Only <b>new</b> rows are added, as <i>pending</i>, Face · EN, no deposit — set language / Body / deposit afterwards. Clients already on the roster keep their status, deposit, language and notes; if they are there with only a first name, their <b>full name</b> from the file is filled in. Matching is by <b>name + day + time</b> ("Alejandra" on the roster = "Alejandra Tiki" in the file).</div>';
+  html += '<div class="imp-note">Only <b>new</b> rows are added, as <i>pending</i> (or <i>Confirmed</i> if Vagaro says so), Face · EN, no deposit — set language / Body / deposit afterwards. Clients already on the roster keep their status, deposit, language and notes; if they are there with only a first name, their <b>full name</b> from the file is filled in. Matching is by <b>name + day + time</b> ("Alejandra" on the roster = "Alejandra Tiki" in the file).</div>';
+  if(IMP.confOnly) html += '<div class="imp-note" style="background:#e6f6ee;border-color:#9fd8bb">✅ <b>Confirmed report</b> — new clients are added as <b>Confirmed</b>, and clients already on the roster as pending / Left VM become <b>Confirmed</b>. Clients missing from this file are not flagged (this report only lists the confirmed ones).</div>';
+  else if(confN) html += '<div class="imp-note" style="background:#e6f6ee;border-color:#9fd8bb">✅ Rows that are <b>Confirmed</b> in Vagaro are added / set as <b>Confirmed</b>.</div>';
+  if(cflN) html += '<div class="callout-stop">⚠ <b>'+cflN+'</b> client'+(cflN>1?'s are':' is')+' <b>Confirmed in Vagaro</b> but Canceled / No-show / Rescheduled on the roster. Not changed — check which one is right.</div>';
   html += '<label class="imp-note" style="display:block;cursor:pointer"><input type="checkbox" id="imp-today"> The new clients in this file are <b>bookings made today</b> — mark them for the EOD Reminder. <span style="color:var(--gray)">Leave it unticked for the morning build of the day.</span></label>';
   if(movN) html += '<div class="callout-stop" style="background:#fff3d6;border-color:#f0c36d;color:#8a5a00">⏱ <b>'+movN+'</b> client'+(movN>1?'s are':' is')+' already on the roster that day at a <b>different time</b>. Not added automatically — check Vagaro and fix the time in the roster (✎), or set the old row to Rescheduled and import again.</div>';
   dl.forEach(function(date){
     var rs = IMP.rows.filter(function(r){ return r.date===date; }).sort(function(a,b){ return slotMins(a.slot)-slotMins(b.slot); });
     html += '<div class="rep-loc">'+fmtDate(date)+' — '+rs.length+' in file</div><table class="rep">';
     rs.forEach(function(r){
-      html += '<tr class="imp-'+r.state+'"><td>'+fmtTime(r.slot)+(r.grid?'':' <span class="dep-pill" title="not a standard slot">off-grid</span>')+'</td>'
+      html += '<tr class="imp-'+r.state+((r.toConf||r.conflict||r.upgrade)?' imp-act':'')+'"><td>'+fmtTime(r.slot)+(r.grid?'':' <span class="dep-pill" title="not a standard slot">off-grid</span>')+'</td>'
         + '<td><b>'+esc(r.name)+'</b></td>'
-        + '<td>'+(r.state==='new'?'<span class="st st-conf">NEW</span>'
-                 :r.state==='exists'?(r.upgrade ? '<span class="st st-show" title="on the roster as: '+esc(r.upgrade.from)+'">already in · full name added</span>' : '<span class="st st-pend">already in</span>')
+        + '<td>'+(r.state==='new'?'<span class="st st-conf">NEW'+(r.conf?' · Confirmed':'')+'</span>'
+                 :r.state==='exists'?(r.conflict ? '<span class="st st-bad">Confirmed in Vagaro · '+esc(r.conflict)+' here — check</span>'
+                    : (r.upgrade ? '<span class="st st-show" title="on the roster as: '+esc(r.upgrade.from)+'">already in · '+(isLessComplete(r.upgrade.from, r.name) ? 'full name added' : 'name fixed')+'</span>' : '<span class="st st-pend">already in</span>')
+                      + (r.toConf ? ' <span class="st st-conf" title="now: '+esc(r.toConf.from)+'">→ Confirmed</span>' : ''))
                  :r.state==='moved'?'<span class="st st-vm">'+esc(r.note)+' — check</span>'
                  :'<span class="st st-vm">duplicate in file</span>')+'</td></tr>';
     });
@@ -2456,34 +2495,38 @@ function renderImport(){
   document.getElementById('imp-body').innerHTML = html;
   document.getElementById('imp-nav').innerHTML =
       '<button class="btn ghost" onclick="closeImport()">Cancel</button>'
-    + '<button class="btn primary" onclick="importCommit()" '+((newN||updN)?'':'disabled style="opacity:.4"')+'>✓ Add '+newN+' to '+LOC_NAME[loc]+(updN?' · complete '+updN+' name'+(updN>1?'s':''):'')+'</button>';
+    + '<button class="btn primary" onclick="importCommit()" '+((newN||updN||confN)?'':'disabled style="opacity:.4"')+'>✓ Add '+newN+' to '+LOC_NAME[loc]+(updN?' · fix '+updN+' name'+(updN>1?'s':''):'')+(confN?' · '+confN+' Confirmed':'')+'</button>';
 }
 function importCommit(){
   var cbT = document.getElementById('imp-today'), newToday = (cbT && cbT.checked) ? todayMiami() : '';
-  var loc = IMP.loc, added = 0, renamed = 0, byDate = {};
-  IMP.rows.filter(function(r){ return r.state==='new' || r.upgrade; }).forEach(function(r){ (byDate[r.date] = byDate[r.date]||[]).push(r); });
+  var loc = IMP.loc, added = 0, renamed = 0, confirmed = 0, byDate = {};
+  IMP.rows.filter(function(r){ return r.state==='new' || r.upgrade || r.toConf; }).forEach(function(r){ (byDate[r.date] = byDate[r.date]||[]).push(r); });
   Object.keys(byDate).forEach(function(date){
     var d = readLocal(date, loc);
     byDate[date].forEach(function(r){
-      if(r.upgrade){                                    /* ya estaba en el roster: solo se completa el nombre */
-        var k = r.upgrade.slot+'|'+r.upgrade.idx, row0 = d.rows[k];
-        if(row0){ row0.client = r.name; row0._ts = Date.now(); postRow(date, loc, r.upgrade.slot, r.upgrade.idx, row0); renamed++; }
+      if(r.state === 'exists'){                         /* ya estaba en el roster: nombre completo y/o -> Confirmed */
+        var ref = r.upgrade || r.toConf, k = ref.slot+'|'+ref.idx, row0 = d.rows[k];
+        if(row0){
+          if(r.upgrade){ row0.client = r.name; renamed++; }
+          if(r.toConf && DONE_STATUSES.indexOf(row0.status||'') === -1){ row0.status = 'Confirmed'; confirmed++; }
+          row0._ts = Date.now(); postRow(date, loc, ref.slot, ref.idx, row0);
+        }
         return;
       }
       var t = targetFor(date, loc, r.slot, d.targets), max = t;
       Object.keys(d.rows).forEach(function(k){ var p=k.split('|'); if(p[0]===r.slot) max=Math.max(max, +p[1]+1); });
       var idx = 0;
       while(idx < max && d.rows[r.slot+'|'+idx] && (d.rows[r.slot+'|'+idx].client||'').trim()) idx++;
-      var row = {slot:r.slot, idx:idx, client:r.name, source:defSource(), status:'',
+      var row = {slot:r.slot, idx:idx, client:r.name, source:defSource(), status:r.conf ? 'Confirmed' : '',
                  notes: packMeta({lang:'EN', type:'Face', dep:false, phone:phoneFor(r.name), notes:''}), blocked:false, created:newToday, _ts:Date.now()};
       d.rows[r.slot+'|'+idx] = row;
       postRow(date, loc, r.slot, idx, row);
-      added++;
+      added++; if(r.conf) confirmed++;
     });
     writeLocal(date, loc, d);
   });
   closeImport();
-  toast((added ? added + ' client' + (added===1?'':'s') + ' added' : '') + (added && renamed ? ' · ' : '') + (renamed ? renamed + ' full name' + (renamed===1?'':'s') + ' filled in' : '')
+  toast([added ? added + ' client' + (added===1?'':'s') + ' added' : '', renamed ? renamed + ' name' + (renamed===1?'':'s') + ' fixed' : '', confirmed ? confirmed + ' Confirmed' : ''].filter(Boolean).join(' · ')
         + ' — ' + LOC_NAME[loc] + ' · ' + Object.keys(byDate).length + ' day' + (Object.keys(byDate).length===1?'':'s'));
   rzLoad();
   if(bdate() in byDate) loadBoard();
