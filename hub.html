@@ -651,6 +651,66 @@ select.agent option{color:#1c2b33;background:#fff}
 @keyframes swl{from{transform:translateX(40px);opacity:.4}to{transform:none;opacity:1}}
 @keyframes swr{from{transform:translateX(-40px);opacity:.4}to{transform:none;opacity:1}}
 @media(prefers-reduced-motion:reduce){.tabpane.swl,.tabpane.swr{animation:none}}
+/* ===== v2.3.2 — send queue ("Start sending") redesign, PC + phone ===== */
+#send-modal .modal{max-width:640px}
+#send-modal .modal > .close-x{display:none}
+.sq-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.sq-top .sq-counter{flex:0 0 auto;border-radius:999px;padding:5px 14px}
+.sq-top .sq-bar{flex:1 1 auto;margin:0;height:6px}
+.sq-x{flex:0 0 auto;width:36px;height:36px;border:1px solid #dfeaea;border-radius:999px;background:#fff;color:var(--gray);font-size:15px;cursor:pointer}
+.sq-x:hover{border-color:var(--dark);color:var(--dark)}
+.sq-id{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin-bottom:12px}
+.sq-id .sq-client{font-size:22px;line-height:1.2}
+.sq-pills{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.sqp{display:inline-flex;align-items:center;gap:4px;height:30px;padding:0 11px;border-radius:999px;border:1px solid #cfe3e2;background:var(--primary-soft);
+  font-family:'Montserrat',sans-serif;font-weight:600;font-size:12.5px;color:var(--dark);white-space:nowrap;line-height:1}
+button.sqp{cursor:pointer}
+.sqp-st{border-color:rgba(0,0,0,.12)}
+.sqp-st .sq-caret{font-size:10px;margin-left:2px;opacity:.7}
+.sqp-dep{background:#f3f5f5;color:#9aa8a8;border-color:#e3eaea}
+.sqp-dep.on{background:var(--green);color:#2e7d4f;border-color:var(--green-b)}
+.sqp-ph{background:#fff}
+.sqp-ph.done{background:var(--green);border-color:var(--green-b);color:#2e7d4f}
+.sq-stwrap{position:relative;display:inline-flex}
+.sq-menu{position:absolute;top:calc(100% + 6px);left:0;z-index:30;display:flex;flex-direction:column;gap:2px;min-width:260px;background:#fff;border:1px solid #dfeaea;border-radius:14px;
+  box-shadow:0 10px 30px rgba(0,0,0,.16);padding:6px}
+.sq-menu[hidden]{display:none}
+.sq-mi{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:0;border-radius:10px;padding:9px 10px;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;color:var(--dark);cursor:pointer}
+.sq-mi:hover,.sq-mi:focus{background:var(--primary-soft);outline:none}
+.sq-mi.on{background:#f3f8f8}
+.sq-dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;border:1px solid rgba(0,0,0,.15)}
+.sq-chk{margin-left:auto;color:var(--primary-dark)}
+.sq-mline{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.sq-mtitle{font-size:12px;color:var(--gray)}
+.sq-lang{display:inline-flex;height:32px;border:1px solid #cfe3e2;border-radius:999px;overflow:hidden;background:var(--primary-soft)}
+.sq-lang button{border:0;border-right:1px solid #cfe3e2;background:transparent;padding:0 12px;font-family:'Montserrat',sans-serif;font-weight:600;font-size:12.5px;color:var(--dark);cursor:pointer}
+.sq-lang button:last-child{border-right:0}
+.sq-lang button.active{background:var(--primary);color:#fff}
+#sq-text{border:1px solid #e3f0f0;border-radius:16px;line-height:1.6;padding:14px 16px}
+.sq-actions{display:flex;align-items:center;gap:8px;margin-top:14px}
+.sq-act-r{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.sq-actions .btn,.sq-endbtns .btn{border-radius:999px;height:40px;padding:0 18px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap}
+.sq-endbtns{margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+@media(max-width:760px){
+  #send-modal{padding:0;align-items:stretch}
+  #send-modal .modal{max-width:none;width:100%;height:100%;max-height:none;border-radius:0;padding:0;display:flex;flex-direction:column;overflow:hidden;animation:none}
+  #sq-body{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+  .sq-wrap{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+  .sq-main{flex:1 1 auto;min-height:0;overflow-y:auto;padding:12px 14px 10px;-webkit-overflow-scrolling:touch}
+  .sq-id{flex-direction:column;align-items:flex-start;gap:8px}
+  .sq-id .sq-client{font-size:21px}
+  .sqp{height:32px}
+  .sq-menu{min-width:240px;max-width:calc(100vw - 28px)}
+  .sq-mi{padding:11px 10px;font-size:14px}
+  .sq-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:0;padding:10px 14px calc(10px + env(safe-area-inset-bottom));border-top:1px solid #e3f0f0;background:#fff}
+  .sq-act-r{display:contents}
+  .sq-actions .btn{height:46px;padding:0 6px;font-size:13px;width:100%}
+  .sq-ghl{grid-column:1 / -1;order:-1}
+  .sq-back{order:1}
+  .sq-cp{order:2}
+  .sq-nx{order:3}
+  .sq-empty{padding:40px 16px}
+}
 /* ===== PHONE (≤760px) v2.2: full-width sticky header, compact board, client cards, collapsible Timeline ===== */
 @media(max-width:760px){
   body{overflow-x:clip}
@@ -894,7 +954,7 @@ select.agent option{color:#1c2b33;background:#fff}
     <div class="hrow">
       <div class="brand">
         <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea">
-        <h1 title="Confirmation Hub 2.3.1">Confirmation Hub <span class="hver">2.3.1</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
+        <h1 title="Confirmation Hub 2.3.2">Confirmation Hub <span class="hver">2.3.2</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
       </div>
       <div class="hctl">
         <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">🔄 Refresh</button>
@@ -2423,15 +2483,15 @@ function renderSend(){
     box.innerHTML = '<div class="sq-empty"><div class="big">🎉</div>'
       + '<div style="font-family:Montserrat;font-weight:800;font-size:18px;color:var(--dark)">Nobody left to text</div>'
       + '<div style="margin-top:6px">'+(SQ.msgId==='noshow_15' ? 'Nobody is marked No-show for '+fmtDate(SQ.date)+'.' : SQ.msgId==='eod_reminder' ? 'No clients were added to the roster today for '+fmtDate(SQ.date)+'.' : 'Everyone on the '+(SQ.override ? fmtDate(SQ.date) : (SQ.track==='same'?'same-day':'next-day'))+' roster is already confirmed, canceled or rescheduled.')+'</div>'
-      + '<div style="margin-top:16px"><button class="btn primary" onclick="closeSend()">Close</button></div></div>';
+      + '<div class="sq-endbtns"><button class="btn primary" onclick="closeSend()">Close</button></div></div>';
     return;
   }
   if(SQ.i >= SQ.list.length){
     box.innerHTML = '<div class="sq-empty"><div class="big">✅</div>'
       + '<div style="font-family:Montserrat;font-weight:800;font-size:18px;color:var(--dark)">Queue finished</div>'
       + '<div style="margin-top:6px">'+SQ.list.length+' message'+(SQ.list.length===1?'':'s')+' worked through. Statuses are saved on the roster.</div>'
-      + '<div style="margin-top:16px"><button class="btn primary" onclick="closeSend()">Done</button> '
-      + '<button class="btn ghost" onclick="SQ.i=0;renderSend()">↺ Go through again</button></div></div>';
+      + '<div class="sq-endbtns"><button class="btn primary" onclick="closeSend()">✓ Done</button>'
+      + '<button class="btn ghost" onclick="SQ.i=0;renderSend()">🔁 Go through again</button></div></div>';
     renderLaneCounts();
     return;
   }
@@ -2441,33 +2501,72 @@ function renderSend(){
   var lang = sqLang(c);
   var text = fillMessage(m[lang], c, SQ.date, lang);
   var pct = Math.round((SQ.i / SQ.list.length) * 100);
-  box.innerHTML =
-      '<div class="sq-head"><span class="sq-counter">'+(SQ.i+1)+' / '+SQ.list.length+'</span>'
-    + '<div><div class="sq-client">'+esc(c.client)+'</div>'
-    + '<div class="sq-meta">'+fmtTime(c.slot)+' · '+LOC_NAME[c.loc]+' · '+c.type+' · '+c.lang+' · '+(c.status||'pending')
-      + (c.phone ? ' · ☎ '+fmtPhone(c.phone) : '') + (c.dep ? '<span class="dep-pill">$ deposit paid</span>' : '') + '</div></div></div>'
-    + '<div class="sq-bar"><i style="width:'+pct+'%"></i></div>'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px">'
-      + '<div style="font-size:12px;color:var(--gray)">✉ '+esc(m.title)+' · Clients of '+fmtDate(SQ.date)+(SQ.override?' (selected)':'')+'</div>'
-      + '<div class="mini-tabs" title="Idioma del mensaje">'
-        + '<button class="'+(lang==='en'?'active':'')+'" onclick="sqSetLang(\'en\')">EN</button>'
-        + '<button class="'+(lang==='es'?'active':'')+'" onclick="sqSetLang(\'es\')">ES</button>'
+  var stCls = ST_CLS[c.status] || 'st-none', stTxt = c.status ? (SQ_ST_EM[c.status]||'•')+' '+c.status : '⏳ pending';
+  var isLast = SQ.i === SQ.list.length-1, ghl = GSEND[SQ.msgId] && online();
+  box.innerHTML = '<div class="sq-wrap"><div class="sq-main">'
+    /* header: 1 / 7 · progress · ✕ */
+    + '<div class="sq-top"><span class="sq-counter">'+(SQ.i+1)+' / '+SQ.list.length+'</span>'
+      + '<div class="sq-bar"><i style="width:'+pct+'%"></i></div>'
+      + '<button class="sq-x" onclick="closeSend()" aria-label="Close" title="Close">✕</button></div>'
+    /* client + pills */
+    + '<div class="sq-id"><div class="sq-client">'+esc(c.client)+'</div><div class="sq-pills">'
+      + '<span class="sqp">'+clockEm(c.slot)+' '+fmtTime(c.slot)+'</span>'
+      + '<span class="sqp">📍 '+LOC_NAME[c.loc]+'</span>'
+      + '<span class="sqp">'+(c.type==='Body'?'💪 Body':'🧖 Face')+'</span>'
+      + '<span class="sqp">'+(c.lang==='ES'?'🇪🇸 ES':'🇺🇸 EN')+'</span>'
+      + '<span class="sq-stwrap"><button type="button" class="sqp sqp-st '+stCls+'" id="sq-stbtn" aria-haspopup="menu" aria-expanded="false" onclick="sqStMenu()">'+esc(stTxt)+' <b class="sq-caret">▾</b></button>'
+        + '<div class="sq-menu" id="sq-menu" role="menu" hidden>'
+        + SQ_ST_LIST.map(function(x){ var on = c.status===x;
+            return '<button type="button" role="menuitemradio" aria-checked="'+on+'" class="sq-mi'+(on?' on':'')+'" onclick="sqStMenu(false);sqStatus(\''+x+'\')">'
+              + '<span class="sq-dot '+(ST_CLS[x]||'')+'"></span>'+SQ_ST_EM[x]+' '+esc(x)+(on?'<b class="sq-chk">✓</b>':'')+'</button>'; }).join('')
+        + '</div></span>'
+      + '<button type="button" class="sqp sqp-dep'+(c.dep?' on':'')+'" onclick="sqDeposit()" title="Deposit — tap to switch">💲 '+(c.dep?'paid':'no deposit')+'</button>'
+      + (c.phone ? '<button type="button" class="sqp sqp-ph" id="sq-copyph" onclick="sqCopyPhone()" title="Tap to copy the number">📞 '+fmtPhone(c.phone)+'</button>' : '')
+    + '</div></div>'
+    /* message line + EN | ES */
+    + '<div class="sq-mline"><div class="sq-mtitle">✉️ '+esc(m.title)+' · '+wkShortDay(SQ.date)+' '+(+SQ.date.split('-')[2])+(SQ.override?' (selected)':'')+'</div>'
+      + '<div class="sq-lang" role="group" aria-label="Message language">'
+        + '<button class="'+(lang==='en'?'active':'')+'" onclick="sqSetLang(\'en\')">🇺🇸 EN</button>'
+        + '<button class="'+(lang==='es'?'active':'')+'" onclick="sqSetLang(\'es\')">🇪🇸 ES</button>'
       + '</div></div>'
     + '<div class="msg-box" id="sq-text">'+highlightFilled(text)+'</div>'
-    + '<div class="sq-status">'
-      + '<span style="font-size:12px;color:var(--gray);align-self:center;margin-right:4px">Set status:</span>'
-      + ['Confirmed','Left VM','Canceled','No-show','Rescheduled',CSR,'Moved'].map(function(s){
-          return '<button class="'+(c.status===s?'sel':'')+'" onclick="sqStatus(\''+s+'\')">'+s+'</button>'; }).join('')
-      + '<button class="'+(c.dep?'sel':'')+'" onclick="sqDeposit()" title="Deposit paid">$ Deposit</button>'
     + '</div>'
-    + '<div class="tp-actions">'
-      + (GSEND[SQ.msgId] && online() ? '<button class="btn gold" onclick="gsOpen()" title="Review the full list, then send it through GoHighLevel">⚡ Send / schedule via GHL</button>' : '')
-      + '<button class="btn ghost" onclick="sqPrev()" '+(SQ.i===0?'disabled style="opacity:.4"':'')+'>← Back</button>'
-      + '<button class="btn dark" id="sq-copy" onclick="sqCopy()">📋 Copy</button>'
-      + (c.phone ? '<button class="btn ghost" id="sq-copyph" onclick="sqCopyPhone()" title="Copy the phone number">☎ Phone</button>' : '')
-      + '<button class="btn primary" onclick="sqNext()">'+(SQ.i===SQ.list.length-1?'Finish ✓':'Next →')+'</button>'
-    + '</div>';
+    /* actions */
+    + '<div class="sq-actions">'
+      + '<button class="btn ghost sq-back" onclick="sqPrev()" '+(SQ.i===0?'disabled style="opacity:.4"':'')+'>← Back</button>'
+      + '<div class="sq-act-r">'
+        + '<button class="btn dark sq-cp" id="sq-copy" onclick="sqCopy()">📋 Copy</button>'
+        + (ghl ? '<button class="btn gold sq-ghl" onclick="gsOpen()" title="Review the full list, then send it through GoHighLevel">⚡ Send / schedule via GHL</button>' : '')
+        + '<button class="btn primary sq-nx" onclick="sqNext()">'+(isLast?'Finish ✓':'Next →')+'</button>'
+      + '</div>'
+    + '</div></div>';
 }
+/* send queue: status menu (popover on the status pill) */
+var SQ_ST_LIST = ['Confirmed','Left VM','Canceled','No-show','Rescheduled',CSR,'Moved'];
+var SQ_ST_EM = {'Confirmed':'✅','Left VM':'📞','Canceled':'❌','No-show':'👻','Rescheduled':'🔁','Moved':'➡️','No confirmation required':'✅','Showed':'🌟'}; SQ_ST_EM[CSR] = '🔄';
+function clockEm(slot){
+  var p = String(slot).split(':'), h = (+p[0]) % 12, half = (+p[1]||0) >= 30;
+  return String.fromCodePoint((half ? 0x1F55C : 0x1F550) + ((h + 11) % 12));
+}
+function sqStMenu(open){
+  var m = document.getElementById('sq-menu'), b = document.getElementById('sq-stbtn'); if(!m || !b) return;
+  if(open == null) open = m.hidden;
+  m.hidden = !open; b.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if(open){ var cur = m.querySelector('.sq-mi.on') || m.querySelector('.sq-mi'); if(cur) cur.focus(); }
+}
+document.addEventListener('click', function(e){
+  var m = document.getElementById('sq-menu'); if(!m || m.hidden) return;
+  if(!e.target.closest('.sq-stwrap')) sqStMenu(false);
+});
+document.addEventListener('keydown', function(e){
+  var m = document.getElementById('sq-menu'); if(!m || m.hidden) return;
+  var items = [].slice.call(m.querySelectorAll('.sq-mi')), i = items.indexOf(document.activeElement);
+  if(e.key === 'Escape'){ e.preventDefault(); sqStMenu(false); var b = document.getElementById('sq-stbtn'); if(b) b.focus(); }
+  else if(e.key === 'ArrowDown'){ e.preventDefault(); items[(i+1) % items.length].focus(); }
+  else if(e.key === 'ArrowUp'){ e.preventDefault(); items[(i-1+items.length) % items.length].focus(); }
+  else if(e.key === 'Home'){ e.preventDefault(); items[0].focus(); }
+  else if(e.key === 'End'){ e.preventDefault(); items[items.length-1].focus(); }
+});
 function fillMessage(text, c, date, lang){
   var L = LOCINFO[c.loc];
   var lm = lang==='es' ? L.landmark_es : L.landmark_en;
@@ -4654,7 +4753,7 @@ function openConv(phone){
 }
 function phoneDirRead(){ try{ return JSON.parse(localStorage.getItem('solea_phones')||'{}'); }catch(e){ return {}; } }
 function phoneFor(name){ return phoneDirRead()[nameFull(name)] || ''; }
-function sqCopyPhone(){ var c=SQ.list[SQ.i]; if(c && c.phone) copyText(fmtPhone(c.phone), 'sq-copyph', '☎ Phone'); }
+function sqCopyPhone(){ var c=SQ.list[SQ.i]; if(c && c.phone) copyText(fmtPhone(c.phone), 'sq-copyph', '📞 '+fmtPhone(c.phone)); }
 function datesBetween(from, to){
   var p=from.split('-'), d=new Date(+p[0], +p[1]-1, +p[2]), out=[];
   while(ymd(d) <= to && out.length < 45){ out.push(ymd(d)); d.setDate(d.getDate()+1); }
