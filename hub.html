@@ -662,6 +662,19 @@ footer .ft-ver{opacity:.7;font-size:11px}
   footer .ft-l,footer .ft-r{display:block}
   footer .ft-sep{display:none}
 }
+/* ===== v2.3.12 — Replies: tracked numbers ===== */
+#rp-watch-btn.on{background:var(--primary);border-color:var(--primary);color:#fff}
+.rp-wn{font-weight:800}
+.rp-watch{background:#fff;border:1px solid #e3f0f0;border-radius:14px;padding:12px 14px;margin:10px 0 4px}
+.rp-w-add{display:flex;gap:8px;align-items:center}
+.rp-w-add input{flex:1 1 auto;min-width:0;height:var(--pill-h,36px);border:1px solid #cfe3e2;border-radius:999px;padding:0 14px;font-size:14px}
+.rp-w-add .btn{height:var(--pill-h,36px);border-radius:999px;padding:0 16px;white-space:nowrap}
+.rp-w-note{font-size:12px;color:var(--gray);margin-top:8px}
+.rp-w-msg{font-size:12.5px;margin-top:8px;font-weight:600;color:var(--dark)}
+.rp-w-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.rp-w-chip{display:inline-flex;align-items:center;gap:6px;background:var(--primary-soft);border:1px solid #cfe3e2;border-radius:999px;padding:4px 6px 4px 12px;font-size:12.5px}
+.rp-w-chip button{border:0;background:#fff;border-radius:999px;width:26px;height:26px;cursor:pointer;color:var(--gray)}
+@media(max-width:760px){ .rbar #rp-status{flex:1 1 auto!important} }
 /* ===== v2.3.2 — send queue ("Start sending") redesign, PC + phone ===== */
 #send-modal .modal{max-width:640px}
 #send-modal .modal > .close-x{display:none}
@@ -965,7 +978,7 @@ button.sqp{cursor:pointer}
     <div class="hrow">
       <div class="brand">
         <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea">
-        <h1 title="Confirmation Hub 2.3.11">Confirmation Hub <span class="hver">2.3.11</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
+        <h1 title="Confirmation Hub 2.3.12">Confirmation Hub <span class="hver">2.3.12</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
       </div>
       <div class="hctl">
         <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">🔄 Refresh</button>
@@ -1078,10 +1091,12 @@ button.sqp{cursor:pointer}
       <button class="btn ghost sm" id="rp-toggle" onclick="rpToggleAll()">🆕 New only</button>
       <button class="btn ghost sm" onclick="rpAllSeen()">✅ Mark all seen</button>
       <button class="btn ghost sm" onclick="loadReplies()" aria-label="Refresh" title="Refresh">🔄<span class="blbl"> Refresh</span></button>
+      <button class="btn ghost sm" id="rp-watch-btn" onclick="watchToggle()" aria-expanded="false" title="Track the replies of a number that is not on the roster">📌<span class="blbl"> Track a number</span><span class="rp-wn" id="rp-wn"></span></button>
       <button type="button" class="m-info" onclick="mHelp(this)" aria-label="Help" title="Help">ⓘ</button>
       <span id="rp-status" style="font-size:11.5px;color:var(--gray)"></span>
       <span class="m-help" style="font-size:12.5px;color:var(--gray)">Chats with clients <b>on your roster</b> (yesterday · today · tomorrow) — the last 3 messages, from the client and from the team. Everything else in GHL is ignored.</span>
     </div>
+    <div class="rp-watch" id="rp-watch" hidden></div>
     <div id="rp-list"></div>
   </div>
 
@@ -3146,7 +3161,7 @@ function closeImport(){ document.getElementById('import-modal').classList.remove
    Texts, normal rooms and default send times live in the Sheet (shared by every device).
    Sending, report schedule and status come from the script; secrets (tokens, keys) are never shown or editable here.
    ================================================================ */
-var HUB_EXPECTED_SERVER = '2.1.22';
+var HUB_EXPECTED_SERVER = '2.1.23';
 var APPCFG = (function(){ try{ return JSON.parse(localStorage.getItem('solea_appcfg')||'{}'); }catch(e){ return {}; } })();
 var MSG_ORIG = {}, LOC_ORIG = JSON.parse(JSON.stringify(LOCINFO));
 Object.keys(MESSAGES).forEach(function(id){ MSG_ORIG[id] = {en:MESSAGES[id].en, es:MESSAGES[id].es}; });
@@ -3390,8 +3405,17 @@ function renderSending(){
     + autoRow('LANG_DETECT', c.langDetect, 'Automatic language detection', 'Sets a new client’s language from their last messages in GHL (manual changes are never overwritten).')
     + '<div class="set-row" style="margin:-2px 0 10px 0"><button class="btn ghost sm" id="lang-refresh" onclick="langRefresh()">🔄 Refresh Language</button><span class="set-note" id="lang-refresh-note" style="margin-left:8px">Re-reads today’s and tomorrow’s clients’ messages now and updates their language (clients you set by hand stay as they are).</span></div>'
     + '<div id="lang-lock-list" style="margin:-4px 0 12px">'+langLockHtml()+'</div>'
+    + '<div class="set-row" style="margin-bottom:10px;align-items:center"><b>📌 Tracked numbers (Replies):</b> keep showing their replies for '
+      + '<input type="number" id="cfg-watchdays" class="set-txt" min="1" max="30" style="width:64px" value="'+(c.watchDays||3)+'"> days '
+      + '<button class="btn ghost sm" onclick="saveWatchDays()">Save</button>'
+      + '<span class="set-note">After that they stop being tracked. Counts from the moment the number was added.</span></div>'
     + autoRow('REPLY_ALERTS', c.replyAlerts !== false, 'Telegram: replies that need attention', c.telegram ? 'A Telegram message when a client of the <b>Brickell</b> roster (yesterday · today · tomorrow) writes something a person should see: 🔴 cancel / change time / running late with an appointment <b>today</b> · 🟡 questions and changes for another day. Clear YES answers come as a 👍 follow-up summary (no buttons) saying what the automatic texts did. Alerts go out 9 AM–6 PM (Miami); what arrives at night comes at 9 AM as “🌅 Overnight replies”. Each alert has buttons (✅ Confirmed · 📞 Left VM · ❌ Canceled · 👀 Seen), and replying to it in Telegram texts the client after a ✅ Send confirmation — only the owner (TELEGRAM_OWNER_ID) can use them.' : '<span style="color:#a03636">Telegram is not set up yet (TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID).</span>')
     + autoRow('ALERTS', c.alerts, 'Telegram problem alerts', c.telegram ? 'A Telegram message when GHL, the automatic texts, opportunities or sending fail, and another when it works again. One per problem (repeats at most every 6 h).' : '<span style="color:#a03636">Telegram is not set up yet (TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID) — alerts cannot be sent.</span>');
+}
+function saveWatchDays(){
+  var v = String(parseInt((byId('cfg-watchdays')||{}).value, 10) || '');
+  if(!(+v >= 1 && +v <= 30)){ toast('⚠ Use a number of days from 1 to 30'); return; }
+  cfgSet('WATCH_DAYS', v, 'Tracked numbers: '+v+' day'+(v==='1'?'':'s')).then(loadSrvCfg).then(function(){ RPL.watchDays = +v; renderSending(); loadWatch(); });
 }
 function autoRow(key, on, title, desc){
   return '<div class="set-row" style="margin-bottom:6px;align-items:flex-start"><span class="set-pill '+(on?'st-conf':'st-bad')+'" style="min-width:64px;text-align:center">'+(on?'ON':'OFF')+'</span>'
@@ -4326,7 +4350,9 @@ function askReplyKey(){
 function loadReplies(){
   if(!online()) return Promise.resolve();
   var since = new Date(Date.now() - 72*3600*1000).toISOString();
+  (RPL.watch||[]).forEach(function(w){ if(w.addedAt && w.addedAt < since) since = w.addedAt; });   /* tracked numbers: since they were added */
   var key = localStorage.getItem('solea_hub_key') || '';
+  loadWatch();
   return fetch(WEBAPP_URL+'?action=replies&since='+encodeURIComponent(since)+'&key='+encodeURIComponent(key))
     .then(function(r){ return r.json(); })
     .then(function(d){
@@ -4345,11 +4371,16 @@ function matchReplies(){
       (byPh[r.phone] = byPh[r.phone] || []).push({date:date, pri:di, loc:r.loc, slot:r.slot, idx:r.idx, client:r.client, status:r.status, lang:r.lang});
     });
   });
+  (RPL.watch||[]).forEach(function(w){
+    if(byPh[w.phone]) return;                                 /* already on the roster: it shows as usual */
+    byPh[w.phone] = [{watch:true, date:'', pri:9, loc:'', slot:'', idx:0, client:w.name || fmtPhone(w.phone), status:'', lang:'EN', addedAt:w.addedAt, until:w.until}];
+  });
   var groups = {}, newPh = {}, nNew = 0;
   RPL.raw.forEach(function(m){
     var list = byPh[m.phone]; if(!list) return;
     var e = list.slice().sort(function(a,b){ return a.pri - b.pri; })[0];
-    var gk = e.date+'|'+e.loc+'|'+e.slot+'|'+e.idx;
+    if(e.watch && (Date.parse(m.t) < Date.parse(e.addedAt) - 72*3600000 || m.t > e.until)) return;   /* tracked number: from 3 days before it was added until it stops being tracked */
+    var gk = e.watch ? 'w|'+m.phone : e.date+'|'+e.loc+'|'+e.slot+'|'+e.idx;
     var g = groups[gk] || (groups[gk] = {e:e, msgs:[], phone:m.phone, convId:'', isNew:false});
     var k = m.t+'|'+m.phone, isNew = !seen[k] && !m.seen;      /* seen on this device OR on any other (the server remembers it) */
     g.msgs.push({t:m.t, text:m.message, key:k, isNew:isNew});
@@ -4611,7 +4642,8 @@ function qrSend(i){
   if(q.busy || !text) return;
   if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
   q.busy = true; q.err = ''; qrPaint(i);
-  var payload = {action:'send', hubKey:gsKey(), date:todayMiami(), agent:AGENT, items:[{key:e.loc+'|'+e.slot+'|'+e.idx, loc:e.loc, phone:g.phone, name:e.client, msgId:'quick', text:text}]};
+  var qloc = e.watch ? ((RPL.server.sendLocs||[])[0] || 'brickell') : e.loc;
+  var payload = {action:'send', hubKey:gsKey(), date:todayMiami(), agent:AGENT, items:[{key:e.watch ? 'w|'+g.phone : e.loc+'|'+e.slot+'|'+e.idx, loc:qloc, phone:g.phone, name:e.client, msgId:'quick', text:text}]};
   fetch(WEBAPP_URL, {method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload)})
     .then(function(r){ return r.json(); })
     .then(function(d){
@@ -4662,6 +4694,67 @@ function rpAllSeen(){
   var s = rpSeenRead(), keys = []; RPL.groups.forEach(function(g){ g.msgs.forEach(function(m){ s[m.key] = 1; if(m.isNew) keys.push(m.key); }); }); rpSeenWrite(s);
   seenPush(keys); matchReplies();
 }
+/* ---------- 📌 Tracked numbers: replies of phones that are not on the roster (name from GHL; shared by every device) ---------- */
+RPL.watch = (function(){ try{ return JSON.parse(localStorage.getItem('solea_watch')||'[]'); }catch(e){ return []; } })();
+RPL.watchDays = 3; RPL.watchOpen = false; RPL.watchBusy = false; RPL.watchMsg = '';
+function watchLeft(until){
+  var ms = Date.parse(until) - Date.now(); if(!(ms > 0)) return 'ending';
+  var h = Math.ceil(ms/3600000); return h > 36 ? Math.ceil(h/24)+' days left' : h+' h left';
+}
+function watchSave(list){ RPL.watch = list || []; try{ localStorage.setItem('solea_watch', JSON.stringify(RPL.watch)); }catch(e){} }
+function loadWatch(){
+  if(!online() || !gsKey()) return;
+  fetch(WEBAPP_URL+'?action=watch&key='+encodeURIComponent(gsKey()))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d || !Array.isArray(d.watch)) return;
+      var before = JSON.stringify(RPL.watch);
+      watchSave(d.watch); RPL.watchDays = d.days || 3;
+      renderWatch();
+      if(before !== JSON.stringify(RPL.watch)) matchReplies();
+    }).catch(function(){});
+}
+function watchToggle(){ RPL.watchOpen = !RPL.watchOpen; renderWatch(); if(RPL.watchOpen){ var i = byId('rp-watch-in'); if(i) i.focus(); } }
+function watchAdd(){
+  var inp = byId('rp-watch-in'), ph = normPhone(inp ? inp.value : '');
+  if(!ph){ RPL.watchMsg = '⚠ Enter a 10-digit phone number.'; renderWatch(); return; }
+  if(!online() || !gsKey()){ RPL.watchMsg = '⚠ Needs the connected (online) mode.'; renderWatch(); return; }
+  RPL.watchBusy = true; RPL.watchMsg = 'Looking it up in GoHighLevel…'; renderWatch();
+  fetch(WEBAPP_URL, {method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(withKey({action:'watchadd', phone:ph, agent:AGENT}))})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      RPL.watchBusy = false;
+      if(!d || !d.ok){ if(d && d.error === 'key') authFail(); RPL.watchMsg = '⚠ '+((d && d.error) || 'No answer'); renderWatch(); return; }
+      watchSave(d.watch); RPL.watchDays = d.days || RPL.watchDays;
+      RPL.watchMsg = d.found ? '✓ Tracking '+(d.name || fmtPhone(ph))+' for '+RPL.watchDays+' day'+(RPL.watchDays===1?'':'s')+'.'
+                             : '✓ Tracking '+fmtPhone(ph)+' for '+RPL.watchDays+' day'+(RPL.watchDays===1?'':'s')+' — not found in GHL, so no name.';
+      if(inp) inp.value = '';
+      renderWatch(); loadReplies();
+    })
+    .catch(function(){ RPL.watchBusy = false; RPL.watchMsg = '⚠ Could not reach the server.'; renderWatch(); });
+}
+function watchDel(ph){
+  watchSave(RPL.watch.filter(function(w){ return w.phone !== ph; })); renderWatch(); matchReplies();
+  fetch(WEBAPP_URL, {method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(withKey({action:'watchdel', phone:ph, agent:AGENT}))})
+    .then(function(r){ return r.json(); }).then(function(d){ if(d && d.ok){ watchSave(d.watch); renderWatch(); } }).catch(function(){});
+}
+function renderWatch(){
+  var n = (RPL.watch||[]).length, b = byId('rp-watch-btn'), wn = byId('rp-wn'), el = byId('rp-watch');
+  if(wn) wn.textContent = n ? ' '+n : '';
+  if(b){ b.setAttribute('aria-expanded', RPL.watchOpen ? 'true' : 'false'); b.classList.toggle('on', RPL.watchOpen); }
+  if(!el) return;
+  el.hidden = !RPL.watchOpen;
+  if(!RPL.watchOpen) return;
+  el.innerHTML = '<div class="rp-w-add"><input type="tel" id="rp-watch-in" inputmode="tel" placeholder="Phone number, e.g. (305) 555-0101" onkeydown="if(event.key===\'Enter\')watchAdd()">'
+    + '<button class="btn primary sm" onclick="watchAdd()" '+(RPL.watchBusy?'disabled':'')+'>'+(RPL.watchBusy?'Adding…':'➕ Track')+'</button></div>'
+    + '<div class="rp-w-note">Their replies show here for <b>'+RPL.watchDays+' day'+(RPL.watchDays===1?'':'s')+'</b> (change it in ⚙ Settings → Messages). The name comes from GoHighLevel.</div>'
+    + (RPL.watchMsg ? '<div class="rp-w-msg">'+esc(RPL.watchMsg)+'</div>' : '')
+    + (n ? '<div class="rp-w-list">'+RPL.watch.map(function(w){
+        return '<span class="rp-w-chip"><b>'+esc(w.name || fmtPhone(w.phone))+'</b>'+(w.name ? ' · '+fmtPhone(w.phone) : '')+' · '+watchLeft(w.until)
+          + '<button type="button" onclick="watchDel(\''+w.phone+'\')" aria-label="Stop tracking" title="Stop tracking">✕</button></span>';
+      }).join('')+'</div>' : '<div class="rp-w-note">No numbers tracked right now.</div>');
+}
+renderWatch();
 function rpToggleAll(){ RPL.showAll = !RPL.showAll; renderReplies(); }
 function renderReplies(){
   var box = document.getElementById('rp-list'); if(!box) return;
@@ -4684,12 +4777,13 @@ function renderReplies(){
     if(!RPL.showAll && !g.isNew) return;
     shown++;
     var e = g.e, last = g.msgs[g.msgs.length-1], intent = rpIntent(last.text), th = rpThread(g);
-    var canThanks = intent==='yes' && last.isNew && rpClearYes(last.text) && !!thankMsgId(e) && !!RPL.server.sendEnabled
+    var canThanks = !e.watch && intent==='yes' && last.isNew && rpClearYes(last.text) && !!thankMsgId(e) && !!RPL.server.sendEnabled
       && (RPL.server.sendLocs||[]).indexOf(e.loc)!==-1 && !offBook(e.status) && e.status!=='No-show' && e.status!=='Showed';
-    var when = (e.date===todayMiami() ? 'Today' : e.date===tomorrowMiami() ? 'Tomorrow' : fmtDate(e.date)) + ' ' + fmtTime(e.slot) + ' · ' + LOC_NAME[e.loc];
+    var when = e.watch ? '📌 Tracked number · '+watchLeft(e.until)
+             : (e.date===todayMiami() ? 'Today' : e.date===tomorrowMiami() ? 'Tomorrow' : fmtDate(e.date)) + ' ' + fmtTime(e.slot) + ' · ' + LOC_NAME[e.loc];
     html += '<div class="rpcard'+(g.isNew?' new':'')+'">'
       + '<div class="rp-top"><b>'+esc(e.client)+'</b><span class="rp-when">'+esc(when)+'</span>'
-      + '<span class="st '+statusClass(e.status)+'">'+esc(e.status||'pending')+'</span>'
+      + (e.watch ? '' : '<span class="st '+statusClass(e.status)+'">'+esc(e.status||'pending')+'</span>')
       + '<span class="rp-ago">'+rpAgo(last.t)+' · '+rpClock(last.t)+'</span></div>'
       + th.msgs.map(function(m){
           return '<div class="rp-msg'+(m.d==='out'?' out':'')+(m.isNew?' new':'')+'">'
@@ -4698,16 +4792,16 @@ function renderReplies(){
         }).join('')
       + '<div class="rp-acts">'
       + (canThanks ? '<button class="btn sm primary" title="Shows the message first — nothing is sent until you approve it" onclick="tyOpen('+i+')">✓ Confirm + send thank-you</button>' : '')
-      + '<button class="btn sm '+(intent==='yes' && !canThanks?'primary':'ghost')+'" title="Only changes the status — no message is sent" onclick="rpSet('+i+',\'Confirmed\')">✓ Confirmed'+(canThanks?' (no message)':(intent==='yes'?' · suggested':''))+'</button>'
+      + (e.watch ? '' : '<button class="btn sm '+(intent==='yes' && !canThanks?'primary':'ghost')+'" title="Only changes the status — no message is sent" onclick="rpSet('+i+',\'Confirmed\')">✓ Confirmed'+(canThanks?' (no message)':(intent==='yes'?' · suggested':''))+'</button>')
       + '<button class="btn sm ghost" onclick="rpSeen('+i+')">Seen</button>'
       + (g.convId ? '<a class="btn sm ghost" style="text-decoration:none" target="_blank" rel="noopener" href="https://app.gohighlevel.com/v2/location/'+GHL_LOC+'/conversations/conversations/'+esc(g.convId)+'">Open chat ↗</a>' : '')
       + '<button class="btn sm ghost" id="rpph-'+i+'" onclick="copyText(\''+fmtPhone(g.phone)+'\',\'rpph-'+i+'\',\'☎ '+fmtPhone(g.phone)+'\')">☎ '+fmtPhone(g.phone)+'</button>'
       + '</div>'
-      + ((intent==='resched'||intent==='cancel') ? '<div class="rp-hint">Looks like a '+(intent==='resched'?'reschedule':'cancellation')+' request — reply below, then update the status in the Day Board.</div>' : '')
+      + (!e.watch && (intent==='resched'||intent==='cancel') ? '<div class="rp-hint">Looks like a '+(intent==='resched'?'reschedule':'cancellation')+' request — reply below, then update the status in the Day Board.</div>' : '')
       + '<div id="qr-'+i+'">'+rpQrHtml(i)+'</div>'
       + '</div>';
   });
-  if(!shown) html += '<div class="sq-empty"><div class="big">'+(RPL.showAll?'📭':'🎉')+'</div><div>'+(RPL.showAll?'No replies from roster clients in the last 3 days.':'No new replies from your roster clients.')+'</div></div>';
+  if(!shown) html += '<div class="sq-empty"><div class="big">'+(RPL.showAll?'📭':'🎉')+'</div><div>'+(RPL.showAll?'No replies from roster clients or tracked numbers in the last 3 days.':'No new replies from your roster clients or tracked numbers.')+'</div></div>';
   box.innerHTML = html;
 }
 /* "Seen" is shared between devices: it is sent to the server (REPLIES sheet) and every device reads it back with the replies.
