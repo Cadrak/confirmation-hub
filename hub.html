@@ -965,7 +965,7 @@ button.sqp{cursor:pointer}
     <div class="hrow">
       <div class="brand">
         <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea">
-        <h1 title="Confirmation Hub 2.3.5">Confirmation Hub <span class="hver">2.3.5</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
+        <h1 title="Confirmation Hub 2.3.6">Confirmation Hub <span class="hver">2.3.6</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
       </div>
       <div class="hctl">
         <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">🔄 Refresh</button>
@@ -3146,7 +3146,7 @@ function closeImport(){ document.getElementById('import-modal').classList.remove
    Texts, normal rooms and default send times live in the Sheet (shared by every device).
    Sending, report schedule and status come from the script; secrets (tokens, keys) are never shown or editable here.
    ================================================================ */
-var HUB_EXPECTED_SERVER = '2.1.16';
+var HUB_EXPECTED_SERVER = '2.1.17';
 var APPCFG = (function(){ try{ return JSON.parse(localStorage.getItem('solea_appcfg')||'{}'); }catch(e){ return {}; } })();
 var MSG_ORIG = {}, LOC_ORIG = JSON.parse(JSON.stringify(LOCINFO));
 Object.keys(MESSAGES).forEach(function(id){ MSG_ORIG[id] = {en:MESSAGES[id].en, es:MESSAGES[id].es}; });
@@ -3379,6 +3379,7 @@ function renderSending(){
     + '<div class="set-sub" style="margin-top:14px">Automatic messages <span class="set-note">(sent by the system, no approval needed)</span></div>'
     + autoRow('AUTO_EOD', c.autoEod, 'EOD Reminder', 'Every day at '+sendTimeFor('eod_reminder')+' (Miami) the system texts the clients whose appointment was added to the roster <b>today</b> and is for <b>tomorrow</b>. One text per client.')
     + autoRow('AUTO_NOSHOW', c.autoNoshow, 'No-show follow-up', 'Every hour on the hour, 9 AM to 8 PM (Miami), the system texts every client of <b>today</b> marked <b>No-show</b>. One text per client.')
+    + autoRow('AUTO_CONFLONG', c.autoNextDay !== false, 'Confirmed — full details (next day)', 'When a client with an appointment <b>tomorrow</b> answers a clear <b>YES</b> to “Next-day confirmation request” or “Leaving for the day”, the system sets them <b>Confirmed</b> (if they were pending or Left VM) and texts “Confirmed — full details”. Once per client, only the day before (7 AM–8 PM). A YES that arrives too late is only marked Confirmed, with no text. Canceled clients are never reactivated. <b>Brickell only</b> for now.')
     + autoRow('AUTO_TYCONFIRM', c.autoThanks !== false, 'Thank you for confirming (double confirmation)', 'When a client of <b>today</b> answers a clear <b>YES</b> to “Good Morning — double confirmation” or “Didn’t double-confirm yet”, the system sets them <b>Confirmed</b> (if they were pending or Left VM) and texts “Thank you for confirming”. Once per client, 7 AM–8 PM, only before their appointment. Unclear answers (questions, “no”, change of time…) stay in Replies for a person. <b>Brickell only</b> for now.')
     + '<div class="set-note" style="margin:2px 0 10px">They only run while <b>Sending</b> is ON and only for the spas allowed below. Texts come from <b>Messages → ✏ Edit message texts</b>. Everything sent shows in the SENT tab of the Google Sheet as “auto”.</div>'
     + '<div class="set-row"><b>Spas allowed to send:</b> '+chk+'</div>'
@@ -3400,6 +3401,7 @@ var SW_INFO = {
   AUTO_EOD:    {f:'autoEod',    name:'The automatic EOD Reminder'},
   AUTO_NOSHOW: {f:'autoNoshow', name:'The automatic No-show follow-up'},
   AUTO_TYCONFIRM: {f:'autoThanks', name:'The automatic “Thank you for confirming”'},
+  AUTO_CONFLONG:  {f:'autoNextDay', name:'The automatic “Confirmed — full details (next day)”'},
   OPP_SYNC:    {f:'oppSync',    name:'Opportunity sync', off:'Confirmed clients will no longer be moved to “Appointment Confirmed” in GHL. Nothing already moved is undone.', on:'When a client becomes Confirmed, their GHL opportunity will be moved to “Appointment Confirmed”.'},
   LANG_DETECT: {f:'langDetect', name:'Automatic language detection', off:'New clients keep the default language (EN). You can still change it by hand.', on:'New clients’ language will be set from their last messages in GHL.'},
   ALERTS:      {f:'alerts',     name:'Telegram problem alerts', off:'You will no longer get a Telegram message when something fails.', on:'You will get a Telegram message when something fails (and when it recovers).'}
@@ -5721,9 +5723,23 @@ function loadNoReply(force){
     })
     .catch(function(){ NR.err = 'offline'; })
     .then(function(){ NR.busy = false; if(TAB === 'board') renderBoard(); else renderNoReply(); });   /* board: ✅✅ badges too */
+  var tmr = tomorrowMiami();
+  fetch(WEBAPP_URL+'?action=sent&date='+encodeURIComponent(tmr)+'&key='+encodeURIComponent(gsKey()))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d || d.error) return;
+      var nd = {};
+      (d.sent||[]).forEach(function(x){ if(x.msgId === 'confirmed_long' && x.a === 'auto-nd' && x.t) nd[x.phone] = Date.parse(x.t) || 1; });
+      NR.nd = nd; NR.ndDate = tmr;
+      if(TAB === 'board' && bdate() === tmr) renderBoard();
+    }).catch(function(){});
 }
 /* ✅✅ = the client answered YES to today's double-confirmation text; the system confirmed them and sent "Thank you for confirming" */
 function dcBadge(phone){
+  if(phone && NR.nd && NR.ndDate === bdate() && NR.nd[phone]){                 /* tomorrow: confirmed by reply → "full details" sent */
+    var tn = NR.nd[phone];
+    return '<span class="hb good" title="Confirmed by reply (YES to the next-day text)'+(tn > 1 ? ' · full details sent '+nrClock(tn) : '')+'">✅</span>';
+  }
   var t = phone && NR.dc && NR.dc[phone];
   if(!t || NR.date !== todayMiami() || bdate() !== todayMiami()) return '';
   return '<span class="hb good" title="Double-confirmed (replied YES)'+(t > 1 ? ' · thank-you sent '+nrClock(t) : '')+'">✅✅</span>';
