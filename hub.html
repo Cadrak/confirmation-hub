@@ -519,6 +519,13 @@ select.agent option{color:#1c2b33;background:#fff}
 #settings-modal .set-sec h3{font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:1.1px;color:var(--primary-dark);margin-bottom:9px}
 #settings-modal .set-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .set-note{font-size:12px;color:var(--gray)}
+.llk-box{border:1px solid var(--line,#e3eaea);border-radius:10px;padding:6px 10px;max-width:620px;font-size:12.5px}
+.llk-box .llk-h{font-weight:700;color:var(--dark);margin-bottom:2px}
+.llk-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-top:1px solid #f0f4f4}
+.llk-row:first-of-type{border-top:0}
+.llk-row .llk-n{font-weight:700}
+.llk-row .llk-w{color:var(--gray)}
+.llk-row .llk-off{color:var(--gray);text-decoration:line-through}
 .set-sub{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;margin-bottom:6px}
 #settings-modal .switch{border-color:#cfe3e2}
 #settings-modal .switch button{color:var(--gray)}
@@ -574,7 +581,7 @@ select.agent option{color:#1c2b33;background:#fff}
     <div class="hrow">
       <div class="brand">
         <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea">
-        <h1>Confirmation Hub 2.1.17 <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
+        <h1>Confirmation Hub 2.1.18 <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
       </div>
       <div class="hctl">
         <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">↻ Refresh</button>
@@ -2729,6 +2736,7 @@ function renderSending(){
     + autoRow('OPP_SYNC', c.oppSync, 'Opportunity sync', 'When a client becomes <b>Confirmed</b>, their GHL opportunity moves to “Appointment Confirmed”.')
     + autoRow('LANG_DETECT', c.langDetect, 'Automatic language detection', 'Sets a new client’s language from their last messages in GHL (manual changes are never overwritten).')
     + '<div class="set-row" style="margin:-2px 0 10px 0"><button class="btn ghost sm" id="lang-refresh" onclick="langRefresh()">🔄 Refresh Language</button><span class="set-note" id="lang-refresh-note" style="margin-left:8px">Re-reads today’s and tomorrow’s clients’ messages now and updates their language (clients you set by hand stay as they are).</span></div>'
+    + '<div id="lang-lock-list" style="margin:-4px 0 12px">'+langLockHtml()+'</div>'
     + autoRow('ALERTS', c.alerts, 'Telegram problem alerts', c.telegram ? 'A Telegram message when GHL, the automatic texts, opportunities or sending fail, and another when it works again. One per problem (repeats at most every 6 h).' : '<span style="color:#a03636">Telegram is not set up yet (TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID) — alerts cannot be sent.</span>');
 }
 function autoRow(key, on, title, desc){
@@ -3755,6 +3763,53 @@ function ldApply(c, d){
     return d.history ? 'same' : 'none';
   }
 }
+/* ---------- Settings → clients whose language was set by hand (#LLOCK): who they are + lock / unlock each one ----------
+   Unlocked → the next 🔄 Refresh Language (or the automatic check) may change their language from their messages. */
+var LLK = {shown:{}};                                        /* unlocked in this session: keep them in the list so they can be locked again */
+function langLockList(){
+  var out = [];
+  [todayMiami(), tomorrowMiami()].forEach(function(date){
+    ['brickell','sunny'].forEach(function(loc){
+      var d = readLocal(date, loc);
+      Object.keys(d.rows).forEach(function(k){
+        var r = d.rows[k], n = r.notes || '', key = date+'|'+loc+'|'+k;
+        if(!(r.client||'').trim() || r.blocked) return;
+        var lock = /#LLOCK/.test(n);
+        if(!lock && !LLK.shown[key]) return;
+        out.push({key:key, date:date, loc:loc, slot:r.slot, idx:r.idx, client:r.client, lock:lock, lang:/#ES/.test(n)?'ES':'EN', phone:/#TEL\d{10}/.test(n)});
+      });
+    });
+  });
+  out.sort(function(a,b){ return a.date !== b.date ? (a.date < b.date ? -1 : 1) : (slotMins(a.slot) - slotMins(b.slot)); });
+  return out;
+}
+function langLockHtml(){
+  var list = langLockList(); if(!list.length) return '';
+  var today = todayMiami(), nLock = list.filter(function(x){ return x.lock; }).length;
+  return '<div class="llk-box"><div class="llk-h">🔒 Language set by hand — '+nLock+' client'+(nLock===1?'':'s')+' (today &amp; tomorrow)</div>'
+    + list.map(function(x, i){
+        return '<div class="llk-row"><span class="'+(x.lock?'llk-n':'llk-n llk-off')+'">'+esc(x.client)+'</span>'
+          + '<span class="llk-w">'+(x.date === today ? 'Today' : 'Tomorrow')+' '+fmtTime(x.slot)+' · '+(LOC_NAME[x.loc]||x.loc)+' · '+x.lang+(x.phone?'':' · no phone')+'</span>'
+          + '<button class="btn ghost sm" style="margin-left:auto" onclick="langLockSet(\''+esc(x.key)+'\','+(x.lock?'false':'true')+')" title="'
+          + (x.lock ? 'Unlock: the next Refresh Language may change it from the client’s messages' : 'Lock again: the language stays as it is') + '">'
+          + (x.lock ? '🔒 Locked — unlock' : '🔓 Unlocked — lock') + '</button></div>';
+      }).join('')
+    + '<div class="set-note" style="margin-top:4px">Unlocked clients are re-read on the next 🔄 Refresh Language.</div></div>';
+}
+function langLockRender(){ var el = byId('lang-lock-list'); if(el) el.innerHTML = langLockHtml(); }
+function langLockSet(key, on){
+  var p = key.split('|'), date = p[0], loc = p[1], k = p[2]+'|'+p[3];
+  var d = readLocal(date, loc), r = d.rows[k]; if(!r) return;
+  var n = (r.notes || '').replace(/\s*#LLOCK/g, '');
+  r.notes = on ? (n + ' #LLOCK').trim() : n;
+  r._ts = Date.now();
+  writeLocal(date, loc, d);
+  postRow(date, loc, r.slot, r.idx, r);
+  LLK.shown[key] = 1;
+  if(date === bdate() && loc === LOC_ID){ rows = readLocal(date, loc).rows; if(TAB === 'board') renderBoard(); }
+  langLockRender();
+  toast(r.client+' — language '+(on ? 'locked' : 'unlocked'));
+}
 /* ---------- Settings → "Refresh Language": re-reads today's and tomorrow's clients now ---------- */
 function langRefreshList(){
   var out = [], seen = {}, locked = 0;
@@ -3764,7 +3819,7 @@ function langRefreshList(){
       Object.keys(d.rows).forEach(function(k){
         var r = d.rows[k], n = r.notes || '', ph = (n.match(/#TEL(\d{10})/)||[])[1];
         if(!(r.client||'').trim() || r.blocked || !ph) return;
-        if(/#LLOCK/.test(n)){ locked++; return; }
+        if(/#LLOCK/.test(n)){ locked++; return; }                               /* the list under the button shows who they are */
         out.push({date:date, loc:loc, slot:r.slot, idx:r.idx, phone:ph, client:r.client});
       });
     });
@@ -3777,14 +3832,15 @@ function langRefresh(){
   if(!online() || !gsKey()){ toast('⚠ Needs the connected (online) mode'); return; }
   if(SCFG && SCFG.langDetect === false){ toast('⚠ Automatic language detection is OFF — turn it on first'); return; }
   var L = langRefreshList(), list = L.list;
-  if(!list.length){ if(note) note.textContent = 'No clients with a phone number today or tomorrow'+(L.locked?' ('+L.locked+' locked by hand).':'.'); return; }
+  langLockRender();
+  if(!list.length){ if(note) note.textContent = 'No clients with a phone number today or tomorrow'+(L.locked?' ('+L.locked+' locked by hand — see the list below).':'.'); return; }
   LDT.busy = true; LDT.manual = true;
   var i = 0, res = {changed:0, sug:0, same:0, none:0, locked:L.locked, fail:0}, names = [];
   function paint(txt){ if(b){ b.disabled = LDT.manual; b.textContent = LDT.manual ? 'Scanning '+Math.min(i+1,list.length)+' of '+list.length+'…' : '🔄 Refresh Language'; } if(note && txt) note.textContent = txt; }
   function done(){
     LDT.busy = false; LDT.manual = false; paint();
-    var msg = 'Checked '+(list.length-res.fail)+' of '+list.length+' · changed '+res.changed+(names.length?' ('+names.join(', ')+')':'')+' · suggestions '+res.sug+' · no history '+res.none+(res.locked?' · skipped '+res.locked+' locked by hand':'')+(res.fail?' · '+res.fail+' could not be read':'')+'.';
-    if(note) note.textContent = msg; toast(res.changed ? 'Language updated for '+res.changed+' client'+(res.changed===1?'':'s') : 'Language check finished');
+    var msg = 'Checked '+(list.length-res.fail)+' of '+list.length+' · changed '+res.changed+(names.length?' ('+names.join(', ')+')':'')+' · suggestions '+res.sug+' · no history '+res.none+(res.locked?' · skipped '+res.locked+' locked by hand (list below)':'')+(res.fail?' · '+res.fail+' could not be read':'')+'.';
+    if(note) note.textContent = msg; langLockRender(); toast(res.changed ? 'Language updated for '+res.changed+' client'+(res.changed===1?'':'s') : 'Language check finished');
     if(typeof renderBoard === 'function' && TAB === 'board') renderBoard();
   }
   function step(){
