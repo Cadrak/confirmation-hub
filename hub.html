@@ -73,7 +73,8 @@ body{padding-top:112px}   /* room for the fixed header (row + tabs) */
 }
 @keyframes mspin{to{transform:rotate(360deg)}}
 /* phone-only elements: hidden on PC; wrappers that don't exist for the PC layout */
-.mstat,.mtg,.av .mt,.mline,.mnote,.thide,.tl-hidbtn,.wk-mh,table.wk th .wkm,.rz-subm,.rz-mt,.rz-nb,.rz-more{display:none}
+.mstat,.mtg,.av .mt,.mline,.mnote,.thide,.tl-hidbtn,.wk-mh,table.wk th .wkm,.rz-subm,.rz-mt,.rz-nb,.rz-more,.m-em,.m-auto,.m-info,.dpill-t,.m-schedh{display:none}
+.dpill{display:contents}
 .ttask .tx,.ttask .txi{display:contents}
 .tabpane{display:none}
 .tabpane.active{display:block}
@@ -745,6 +746,66 @@ select.agent option{color:#1c2b33;background:#fff}
   #roster-modal .rz-grid .dep.on{background:var(--green);border-color:var(--green-b)}
   #roster-modal .rz-grid .dep.on span::after{filter:none;opacity:1}
 }
+/* ===== PHONE (≤760px) v2.2.3: day pills, help on ⓘ, Replies one row, Settings as a tab, sentence case ===== */
+@media(max-width:760px){
+  .m-em{display:inline}
+  .d-only{display:none}
+  /* sentence case — no UPPERCASE + letter-spacing on phones */
+  .section-title,.panel h2,.nr-head h2,.reminders h2,.duty h3,.rep-loc,.now-cell .role,.badge,.rp-msg .rp-who,.rep-chip span,#settings-modal .set-sec h3,.tp-time{text-transform:none;letter-spacing:normal}
+  .section-title{font-size:15px;margin:16px 0 10px}
+  /* day pills (Timeline, Messages, Board) */
+  .dbar{flex-wrap:wrap;gap:6px;margin:10px 0 0}
+  .dbar .m-help{display:none;order:3;flex-basis:100%;font-size:12px;line-height:1.4}
+  .dbar.show-help .m-help{display:block}
+  .dbar .msgday{order:2;margin-left:0;flex:1 1 100%;flex-wrap:nowrap;gap:5px;min-width:0}
+  .dbar .switch,.boardbar .switch{border:0;gap:5px;overflow:visible;border-radius:0}
+  .dbar .switch button,.boardbar .switch button,.dbar .m-auto,.dpill{display:inline-flex;align-items:center;justify-content:center;border:1px solid #cfe3e2;border-radius:16px;background:#fff;
+    padding:6px 6px;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;color:var(--gray);white-space:nowrap;cursor:pointer;min-height:34px}
+  .dbar .switch button.active,.boardbar .switch button.active,.dbar .m-auto.active{background:var(--primary);border-color:var(--primary);color:#fff!important}
+  .dpill{position:relative;color:var(--dark);flex:0 0 auto}
+  .dpill .dpill-t{display:inline}
+  .dpill input[type=date]{position:absolute;inset:0;width:100%!important;height:100%;min-width:0!important;opacity:0;padding:0!important;border:0;cursor:pointer}
+  #tlauto-tag,#tlauto-btn,#mauto-tag,#mauto-btn{display:none!important}
+  .m-info{display:inline-flex;align-items:center;justify-content:center;flex:0 0 32px;width:32px;height:34px;border:1px solid #cfe3e2;border-radius:16px;background:#fff;color:var(--gray);font-size:15px;cursor:pointer;margin-left:auto}
+  .show-help .m-info{background:var(--primary-soft);border-color:var(--primary);color:var(--primary-dark)}
+  .boardbar .dpill{flex:1 1 auto;min-width:0}
+  .boardbar .switch button{padding:6px 8px}
+  @media(max-width:374px){ .dbar .m-day{display:none} }
+  /* Messages: search full width, pills below */
+  .mbar #msearch{order:1;flex:1 1 100%;width:100%;padding:10px 14px;font-size:14px}
+  /* Timeline: scheduled messages = one foldable line */
+  #sched-panel{margin-top:10px!important;padding:6px 10px}
+  #sched-panel .m-schedh{display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;color:var(--primary-dark);min-height:38px}
+  #sched-panel .m-fold{color:var(--gray);font-size:11px;transition:transform .15s}
+  #sched-panel.mopen .m-fold{transform:rotate(90deg)}
+  #sched-panel .m-schedr{margin-left:auto;width:38px;height:36px;border:1px solid #cfe3e2;border-radius:12px;background:#fff;font-size:16px;cursor:pointer}
+  #sched-panel > h2{display:none}
+  #sched-panel:not(.mopen) .sched-tools,#sched-panel:not(.mopen) #sched-list{display:none!important}
+  #sched-panel .sched-tools .btn{display:none}
+  /* Replies: one row */
+  .rbar{flex-wrap:nowrap;gap:5px;margin:10px 0}
+  .rbar .m-help{display:none}
+  .rbar.show-help{flex-wrap:wrap}
+  .rbar.show-help .m-help{display:block;order:9;flex-basis:100%;font-size:12px;line-height:1.4}
+  .rbar .btn.sm{flex:0 0 auto;padding:7px 9px;font-size:11.5px;white-space:nowrap;min-height:34px}
+  .rbar #rp-status{flex:1 1 auto;min-width:0;font-size:10.5px!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rbar .m-info{margin-left:0}
+  /* Settings as a tab (between header and bottom bar; edges set by mSetSync) */
+  #settings-modal{z-index:65;background:var(--light);padding:0;overflow-y:auto;-webkit-overflow-scrolling:touch;align-items:flex-start}
+  #settings-modal.open{display:block}
+  #settings-modal .modal{max-width:none!important;width:100%;max-height:none;border-radius:0;box-shadow:none;padding:0 12px 20px;animation:none;overflow:visible;background:var(--light)}
+  #settings-modal .close-x,#settings-modal .tp-title{display:none}
+  #settings-modal .set-tabs{position:sticky;top:0;z-index:5;background:var(--light);margin:0 -12px 10px;padding:8px 12px;border-bottom:1px solid #e3f0f0;
+    flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:6px}
+  #settings-modal .set-tabs::-webkit-scrollbar{display:none}
+  #settings-modal .set-tabs button{flex:0 0 auto;border:1px solid #cfe3e2;border-radius:16px;background:#fff;margin:0;padding:7px 12px;font-size:12px;white-space:nowrap;min-height:36px}
+  #settings-modal .set-tabs button.active{background:var(--primary);border-color:var(--primary);color:#fff}
+  #settings-modal .set-sec h3{font-size:14px}
+  #settings-modal .set-sec h3[data-ic]::before{content:attr(data-ic) " "}
+  #settings-modal .set-sec .st{display:inline-block;white-space:nowrap}
+  body.set-open .tabs button.active{border-top-color:transparent;background:none}
+  body.set-open #m-settings{border-top-color:var(--primary);background:rgba(31,200,196,.09)}
+}
 @media(max-width:760px) and (prefers-reduced-motion:reduce){
   .ttask .tx{transition:none}
   .ttask.current{animation:none}
@@ -775,7 +836,7 @@ select.agent option{color:#1c2b33;background:#fff}
     <div class="hrow">
       <div class="brand">
         <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea">
-        <h1 title="Confirmation Hub 2.2.2">Confirmation Hub <span class="hver">2.2.2</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
+        <h1 title="Confirmation Hub 2.2.3">Confirmation Hub <span class="hver">2.2.3</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
       </div>
       <div class="hctl">
         <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">🔄 Refresh</button>
@@ -791,7 +852,7 @@ select.agent option{color:#1c2b33;background:#fff}
       <button id="tab-btn-replies" onclick="showTab('replies')" title="Replies"><i class="ti">💬</i><span class="tlbl"> Replies</span> <span class="badge-n" id="rp-left" style="display:none"></span></button>
       <!-- phone only: Refresh + Settings move to the bottom bar -->
       <button class="m-only" id="m-refresh" onclick="refreshNow()" title="Refresh" aria-label="Refresh"><i class="ti">🔄</i></button>
-      <button class="m-only" onclick="openSettings()" title="Settings" aria-label="Settings"><i class="ti">⚙️</i></button>
+      <button class="m-only" id="m-settings" onclick="openSettings()" title="Settings" aria-label="Settings"><i class="ti">⚙️</i></button>
     </div>
   </div>
 </header>
@@ -803,10 +864,10 @@ select.agent option{color:#1c2b33;background:#fff}
     <div id="setup">⚙ <b>Not connected yet.</b> Paste your Apps Script Web-App URL into <code>WEBAPP_URL</code> at the top of the script. Until then everything runs in <b>local mode</b> — data stays in this browser only.</div>
     <div class="boardbar">
       <div class="switch" style="border-color:#cfe3e2">
-        <button id="trk-same" class="active" onclick="setTrack('same')" style="color:var(--gray)">Same<span class="blbl">-Day</span></button>
-        <button id="trk-next" onclick="setTrack('next')" style="color:var(--gray)">Next<span class="blbl">-Day</span></button>
+        <button id="trk-same" class="active" onclick="setTrack('same')" style="color:var(--gray)"><span class="m-em">☀️ </span>Same<span class="blbl">-Day</span></button>
+        <button id="trk-next" onclick="setTrack('next')" style="color:var(--gray)"><span class="m-em">🌙 </span>Next<span class="blbl">-Day</span></button>
       </div>
-      <input type="date" id="bdate" onchange="loadBoard()">
+      <span class="dpill"><span class="dpill-t" id="bdate-pill"></span><input type="date" id="bdate" onchange="loadBoard()"></span>
       <button class="btn primary sm" onclick="openRoster()" title="Edit roster" aria-label="Edit roster">✎<span class="blbl"> Edit roster</span></button>
       <button class="btn gold sm" onclick="openReport()" title="Report" aria-label="Report">📊<span class="blbl"> Report</span></button>
       <div class="sync"><div class="dot" id="sync-dot"></div><span id="sync-txt">local mode</span></div>
@@ -820,21 +881,24 @@ select.agent option{color:#1c2b33;background:#fff}
 
   <!-- ============ TIMELINE ============ -->
   <div class="tabpane" id="tab-timeline">
-    <div class="msgbar" style="margin-bottom:0">
-      <span style="font-size:12.5px;color:var(--gray)">Day for the <b>Start sending</b> queues. Auto = Same-Day lane → today, Next-Day lane → tomorrow.</span>
+    <div class="msgbar dbar" style="margin-bottom:0">
+      <span class="m-help" style="font-size:12.5px;color:var(--gray)">Day for the <b>Start sending</b> queues. Auto = Same-Day lane → today, Next-Day lane → tomorrow.</span>
       <div class="msgday" title="Choose which day's clients the Start sending queues use. Auto = each lane uses its own day.">
         <div class="switch" style="border-color:#cfe3e2">
-          <button id="tlt-same" onclick="setTlDay('same')" style="color:var(--gray)">Same-Day</button>
-          <button id="tlt-next" onclick="setTlDay('next')" style="color:var(--gray)">Next-Day</button>
+          <button id="tlt-same" onclick="setTlDay('same')" style="color:var(--gray)"><span class="m-em">☀️ </span>Same<span class="m-day">-Day</span></button>
+          <button id="tlt-next" onclick="setTlDay('next')" style="color:var(--gray)"><span class="m-em">🌙 </span>Next<span class="m-day">-Day</span></button>
         </div>
-        <input type="date" id="tldate" onchange="setTlDay('date', this.value)">
+        <button type="button" class="m-auto" id="tlt-mauto" onclick="setTlDay('auto')">🔁 Auto</button>
+        <span class="dpill"><span class="dpill-t" id="tldate-pill"></span><input type="date" id="tldate" onchange="setTlDay('date', this.value)"></span>
         <span id="tlauto-tag" class="rep-tag">Auto</span>
         <button class="btn ghost sm" id="tlauto-btn" onclick="setTlDay('auto')" style="display:none">↺ Auto</button>
+        <button type="button" class="m-info" onclick="mHelp(this)" aria-label="Help" title="Help">ⓘ</button>
       </div>
     </div>
     <div class="panel" id="sched-panel" style="margin-top:16px">
+      <div class="m-schedh" onclick="schedFold()"><span id="m-sched-txt">🕒 Scheduled</span><span class="m-fold">▸</span><button type="button" class="m-schedr" aria-label="Refresh" title="Refresh" onclick="event.stopPropagation();loadSched()">🔄</button></div>
       <h2>🕒 Scheduled messages <span id="sched-count" class="badge-n" style="background:var(--orange-b)"></span></h2>
-      <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px"><button class="btn ghost sm" onclick="loadSched()">↻ Refresh</button><span id="sched-status" style="font-size:11.5px;color:var(--gray)"></span></div>
+      <div class="sched-tools" style="display:flex;gap:10px;align-items:center;margin-bottom:8px"><button class="btn ghost sm" onclick="loadSched()">↻ Refresh</button><span id="sched-status" style="font-size:11.5px;color:var(--gray)"></span></div>
       <div id="sched-list"></div>
     </div>
     <div class="lanes">
@@ -870,17 +934,19 @@ select.agent option{color:#1c2b33;background:#fff}
 
   <!-- ============ MESSAGES ============ -->
   <div class="tabpane" id="tab-messages">
-    <div class="msgbar">
+    <div class="msgbar dbar mbar">
       <input id="msearch" type="text" placeholder="Search messages…" oninput="renderMessages()">
-      <span style="font-size:12.5px;color:var(--gray)">Click a message to open it. Pick a client to fill in their name &amp; time.</span>
+      <span class="m-help" style="font-size:12.5px;color:var(--gray)">Click a message to open it. Pick a client to fill in their name &amp; time.</span>
       <div class="msgday" title="Choose which day's clients the messages use. Auto = each message uses its own day.">
         <div class="switch" style="border-color:#cfe3e2">
-          <button id="mtrk-same" onclick="setMsgDay('same')" style="color:var(--gray)">Same-Day</button>
-          <button id="mtrk-next" onclick="setMsgDay('next')" style="color:var(--gray)">Next-Day</button>
+          <button id="mtrk-same" onclick="setMsgDay('same')" style="color:var(--gray)"><span class="m-em">☀️ </span>Same<span class="m-day">-Day</span></button>
+          <button id="mtrk-next" onclick="setMsgDay('next')" style="color:var(--gray)"><span class="m-em">🌙 </span>Next<span class="m-day">-Day</span></button>
         </div>
-        <input type="date" id="mdate" onchange="setMsgDay('date', this.value)">
+        <button type="button" class="m-auto" id="mtrk-mauto" onclick="setMsgDay('auto')">🔁 Auto</button>
+        <span class="dpill"><span class="dpill-t" id="mdate-pill"></span><input type="date" id="mdate" onchange="setMsgDay('date', this.value)"></span>
         <span id="mauto-tag" class="rep-tag">Auto</span>
         <button class="btn ghost sm" id="mauto-btn" onclick="setMsgDay('auto')" style="display:none">↺ Auto</button>
+        <button type="button" class="m-info" onclick="mHelp(this)" aria-label="Help" title="Help">ⓘ</button>
       </div>
     </div>
     <div id="msglist"></div>
@@ -888,12 +954,13 @@ select.agent option{color:#1c2b33;background:#fff}
 
   <!-- ============ REPLIES ============ -->
   <div class="tabpane" id="tab-replies">
-    <div class="msgbar">
-      <span style="font-size:12.5px;color:var(--gray)">Chats with clients <b>on your roster</b> (yesterday · today · tomorrow) — the last 3 messages, from the client and from the team. Everything else in GHL is ignored.</span>
+    <div class="msgbar rbar">
+      <span class="m-help" style="font-size:12.5px;color:var(--gray)">Chats with clients <b>on your roster</b> (yesterday · today · tomorrow) — the last 3 messages, from the client and from the team. Everything else in GHL is ignored.</span>
       <button class="btn ghost sm" id="rp-toggle" onclick="rpToggleAll()">Showing: new only</button>
-      <button class="btn ghost sm" onclick="rpAllSeen()">✓ Mark all seen</button>
-      <button class="btn ghost sm" onclick="loadReplies()">↻ Refresh</button>
+      <button class="btn ghost sm" onclick="rpAllSeen()"><span class="d-only">✓</span><span class="m-em">✅</span> Mark all seen</button>
+      <button class="btn ghost sm" onclick="loadReplies()" aria-label="Refresh"><span class="d-only">↻ Refresh</span><span class="m-em">🔄</span></button>
       <span id="rp-status" style="font-size:11.5px;color:var(--gray)"></span>
+      <button type="button" class="m-info" onclick="mHelp(this)" aria-label="Help" title="Help">ⓘ</button>
     </div>
     <div id="rp-list"></div>
   </div>
@@ -906,11 +973,11 @@ select.agent option{color:#1c2b33;background:#fff}
     <button class="close-x" onclick="closeSettings()">×</button>
     <div class="tp-title">⚙ Settings</div>
     <div class="set-tabs">
-      <button id="stab-general" class="active" onclick="setSettingsTab('general')">General</button>
-      <button id="stab-rooms" onclick="setSettingsTab('rooms')">Rooms</button>
-      <button id="stab-messages" onclick="setSettingsTab('messages')">Messages</button>
-      <button id="stab-reports" onclick="setSettingsTab('reports')">Reports</button>
-      <button id="stab-system" onclick="setSettingsTab('system')">System</button>
+      <button id="stab-general" class="active" onclick="setSettingsTab('general')"><span class="m-em">⚙️ </span>General</button>
+      <button id="stab-rooms" onclick="setSettingsTab('rooms')"><span class="m-em">🚪 </span>Rooms</button>
+      <button id="stab-messages" onclick="setSettingsTab('messages')"><span class="m-em">💬 </span>Messages</button>
+      <button id="stab-reports" onclick="setSettingsTab('reports')"><span class="m-em">📊 </span>Reports</button>
+      <button id="stab-system" onclick="setSettingsTab('system')"><span class="m-em">🖥️ </span>System</button>
     </div>
 
     <div class="set-pane active" id="spane-general">
@@ -1817,7 +1884,7 @@ function offGridRows(){
   return out.sort(function(a,b){ return slotMins(a.slot) - slotMins(b.slot); });
 }
 function renderBoard(){
-  renderAvail(); renderNoReply(); renderImports();
+  renderAvail(); renderNoReply(); renderImports(); dpillSet('bdate', bdate());
   var html='';
   SLOTS[LOC_ID].forEach(function(slot){
     var s = slotStats(slot), count = s.target;
@@ -1928,6 +1995,59 @@ if(MOB_MQ){
   if(MOB_MQ.addEventListener) MOB_MQ.addEventListener('change', onMq); else if(MOB_MQ.addListener) MOB_MQ.addListener(onMq);
 }
 mobileFit();
+/* ---------- phone v2.2.3: day pills, ⓘ help, scheduled line, Settings as a tab ---------- */
+function dpillSet(id, d){
+  var el = document.getElementById(id+'-pill'); if(!el || !d) return;
+  el.textContent = '📅 ' + wkShortDay(d) + ' ' + (+d.split('-')[2]);
+}
+function mHelp(btn){ var bar = btn.closest('.msgbar'); if(bar) bar.classList.toggle('show-help'); }
+function schedFold(){ var p = document.getElementById('sched-panel'); if(p) p.classList.toggle('mopen'); }
+function schedMob(n){ var el = document.getElementById('m-sched-txt'); if(el) el.textContent = n ? '🕒 Scheduled: ' + n : '🕒 Nothing scheduled'; }
+function mSecTitle(t){
+  var x = String(t||'').toLowerCase();
+  if(/same/.test(x)) return '☀️ Same-day confirmations';
+  if(/next/.test(x)) return '🌙 Next-day confirmations';
+  if(/no-?show/.test(x)) return '👻 No-show follow-ups';
+  if(/cancel/.test(x)) return '❌ ' + t.charAt(0).toUpperCase() + x.slice(1);
+  return '💬 ' + t.charAt(0).toUpperCase() + x.slice(1);
+}
+/* Settings: on phones it is shown as a tab between the header and the bottom bar (CSS); here only its edges + the active ⚙️ */
+function mSetSync(on){
+  document.body.classList.toggle('set-open', !!on);
+  var bg = document.getElementById('settings-modal'); if(!bg) return;
+  if(on && isMobile()){
+    var h = document.querySelector('header'), t = document.querySelector('.tabs');
+    bg.style.top = Math.max(0, h ? h.getBoundingClientRect().bottom : 0) + 'px';
+    bg.style.bottom = (t ? t.getBoundingClientRect().height : 0) + 'px';
+  } else { bg.style.top = ''; bg.style.bottom = ''; }
+}
+var SET_IC = {'Location':'📍','Your name':'👤','Notifications':'🔔','Lead sources':'🏷️','Client statuses':'🚦','Normal rooms per time slot':'🚪','Rooms per day':'📆',
+              'Sending':'📤','Default send times':'⏰','Message texts & spa info':'✏️','Telegram reports':'📨','Report pictures':'🖼️','System status':'🖥️'};
+function setIcons(){
+  document.querySelectorAll('#settings-modal .set-sec h3').forEach(function(h){
+    if(h.getAttribute('data-ic')) return;
+    var k = (h.childNodes[0] && h.childNodes[0].textContent || '').trim();
+    if(SET_IC[k]) h.setAttribute('data-ic', SET_IC[k]);
+  });
+}
+(function(){
+  setIcons();
+  /* phone: tapping another tab of the bottom bar closes Settings and shows that tab */
+  var tabs = document.querySelector('.tabs');
+  if(tabs) tabs.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('button[id^="tab-btn-"]');
+    if(b && isMobile() && settingsOpen()) closeSettings();
+  }, true);
+  /* phone: tapping a date pill opens the date picker */
+  document.querySelectorAll('.dpill input[type=date]').forEach(function(inp){
+    inp.addEventListener('click', function(){ if(isMobile() && inp.showPicker){ try{ inp.showPicker(); }catch(e){} } });
+  });
+  var ms = document.getElementById('msearch');
+  function ph(){ if(ms) ms.placeholder = isMobile() ? '🔍 Search messages…' : 'Search messages…'; }
+  ph();
+  if(MOB_MQ){ var f = function(){ ph(); if(settingsOpen()) mSetSync(true); }; if(MOB_MQ.addEventListener) MOB_MQ.addEventListener('change', f); else if(MOB_MQ.addListener) MOB_MQ.addListener(f); }
+  window.addEventListener('resize', function(){ if(settingsOpen()) mSetSync(true); });
+})();
 function renderLaneCounts(){
   /* cache only — never hits the network (this runs after every edit) */
   ['same','next'].forEach(function(tr){
@@ -2144,7 +2264,9 @@ function renderTlDay(){
   var a = document.getElementById('tlt-same'); if(!a) return;
   a.classList.toggle('active', m === 'same');
   document.getElementById('tlt-next').classList.toggle('active', m === 'next');
-  document.getElementById('tldate').value = o;
+  document.getElementById('tldate').value = isMobile() ? (o || todayMiami()) : o;      /* phone: always show the day in use */
+  var ma = document.getElementById('tlt-mauto'); if(ma) ma.classList.toggle('active', m === 'auto');
+  dpillSet('tldate', o || todayMiami());
   document.getElementById('tlauto-tag').style.display = (m === 'auto') ? '' : 'none';
   document.getElementById('tlauto-btn').style.display = (m === 'auto') ? 'none' : '';
 }
@@ -2872,8 +2994,9 @@ function openSettings(){
   SET_DATE = bdate() || todayMiami();                 /* the date the Day Board is showing */
   renderSourcesNow();
   setSettingsTab(SET_TAB);
+  mSetSync(true);
 }
-function closeSettings(){ byId('settings-modal').classList.remove('open'); }
+function closeSettings(){ byId('settings-modal').classList.remove('open'); mSetSync(false); }
 function setSettingsTab(t){
   SET_TAB = t;
   ['general','rooms','messages','reports','system'].forEach(function(x){
@@ -3895,7 +4018,7 @@ function renderSched(){
   if(!online()){ box.innerHTML = '<div class="imp-note">Scheduled messages need the connected (online) mode.</div>'; return; }
   if(st) st.textContent = SCHED.err ? '⚠ offline · showing last data' : SCHED.last ? 'updated '+hhmm() : 'loading…';
   var groups = schedGroups(), pendTotal = 0;
-  if(!groups.length){ box.innerHTML = '<div class="imp-note">Nothing scheduled. Open a <b>Start sending</b> queue → <b>⚡ Send / schedule via GHL</b> → <b>🕒 Schedule…</b></div>'; document.getElementById('sched-count').textContent = ''; return; }
+  if(!groups.length){ box.innerHTML = '<div class="imp-note">Nothing scheduled. Open a <b>Start sending</b> queue → <b>⚡ Send / schedule via GHL</b> → <b>🕒 Schedule…</b></div>'; document.getElementById('sched-count').textContent = ''; schedMob(0); return; }
   var html = '';
   groups.forEach(function(g, gi){
     pendTotal += g.pending.length;
@@ -3918,6 +4041,7 @@ function renderSched(){
   box.innerHTML = html;
   var cnt = document.getElementById('sched-count');
   cnt.textContent = pendTotal ? pendTotal+' pending' : '';
+  schedMob(pendTotal);
 }
 /* ✕ on a finished item (sent / skipped / canceled): it leaves the list. It stays in the SCHEDULED sheet, hidden. */
 function schedHide(gi){
@@ -4325,8 +4449,10 @@ function renderReplies(){
   var sTxt = RPL.err === 'key' ? '🔑 key missing or wrong'
            : RPL.err === 'offline' ? '⚠ offline · showing last data'
            : RPL.lastSync ? 'checked ' + hhmm() + ' · GHL last read ' + (RPL.server.lastSync ? rpAgo(RPL.server.lastSync) : 'never') : 'loading…';
+  if(isMobile() && !RPL.err && RPL.lastSync) sTxt = '⏱ ' + hhmm() + ' · GHL ' + (RPL.server.lastSync ? rpAgo(RPL.server.lastSync) : 'never');   /* phone: short */
   if(st) st.textContent = sTxt;
-  document.getElementById('rp-toggle').textContent = RPL.showAll ? 'Showing: all (3 days)' : 'Showing: new only';
+  document.getElementById('rp-toggle').textContent = isMobile() ? (RPL.showAll ? '📋 All' : '🆕 New only')
+                                                               : (RPL.showAll ? 'Showing: all (3 days)' : 'Showing: new only');
   var html = '';
   if(RPL.err === 'key') html += '<div class="callout-stop">🔑 The Replies key is missing or wrong. <button class="btn dark sm" onclick="askReplyKey()">Enter key</button></div>';
   if(RPL.server.lastError) html += '<div class="callout-stop" style="background:#fff3d6;border-color:#f0c36d;color:#8a5a00">⚠ GHL sync problem: ' + esc(RPL.server.lastError) + '</div>';
@@ -5022,7 +5148,9 @@ function renderMsgDay(){
   var m = MSGDAY.mode, o = msgOverrideDate();
   document.getElementById('mtrk-same').classList.toggle('active', m === 'same');
   document.getElementById('mtrk-next').classList.toggle('active', m === 'next');
-  document.getElementById('mdate').value = o;
+  document.getElementById('mdate').value = isMobile() ? (o || todayMiami()) : o;       /* phone: always show the day in use */
+  var ma = document.getElementById('mtrk-mauto'); if(ma) ma.classList.toggle('active', m === 'auto');
+  dpillSet('mdate', o || todayMiami());
   document.getElementById('mauto-tag').style.display = (m === 'auto') ? '' : 'none';
   document.getElementById('mauto-btn').style.display = (m === 'auto') ? 'none' : '';
 }
@@ -5156,7 +5284,7 @@ function renderMessages(){
       return !q || (m.title+' '+m.en+' '+m.es+' '+m.when).toLowerCase().indexOf(q)!==-1;
     });
     if(!items.length) return;
-    html += '<div class="section-title">'+sec.title+'</div><div class="mgrid">';
+    html += '<div class="section-title"><span class="d-only">'+sec.title+'</span><span class="m-em">'+esc(mSecTitle(sec.title))+'</span></div><div class="mgrid">';
     items.forEach(function(m){
       var lbl = m.badge==='g'?'Routine':(m.badge==='o'?'Follow-up':'Recovery');
       html += '<div class="mcard" onclick="openMsg(\''+m.id+'\')">'
