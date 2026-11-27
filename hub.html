@@ -965,7 +965,7 @@ button.sqp{cursor:pointer}
     <div class="hrow">
       <div class="brand">
         <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea">
-        <h1 title="Confirmation Hub 2.3.4">Confirmation Hub <span class="hver">2.3.4</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
+        <h1 title="Confirmation Hub 2.3.5">Confirmation Hub <span class="hver">2.3.5</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
       </div>
       <div class="hctl">
         <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">🔄 Refresh</button>
@@ -2045,7 +2045,7 @@ function renderBoard(){
       }
       /* booked client — read-only, except status + deposit which stay one-click */
       html += '<div class="drow'+(i>=s.target?' extra':'')+mStCls(r)+'">'
-        + '<span class="dname" title="Edit in the roster" onclick="openRoster(bdate())">'+replyBadge(m.phone)+newBadge(r)+esc(r.client)+histBadge(m.phone)+'</span>'
+        + '<span class="dname" title="Edit in the roster" onclick="openRoster(bdate())">'+replyBadge(m.phone)+newBadge(r)+esc(r.client)+histBadge(m.phone)+dcBadge(m.phone)+'</span>'
         + '<span class="dtag src '+(SRC_CLS[r.source]||'')+'">'+esc(r.source||'—')+'</span>'
         + '<span class="dtag dic">'+dIcons(m)+lsugBadge(m, slot, i)+'</span>'
         + '<label class="dep'+(m.dep?' on':'')+'" title="Deposit paid"><input type="checkbox" '+(m.dep?'checked':'')
@@ -2069,7 +2069,7 @@ function renderBoard(){
       var m = {lang:/#ES/.test(r.notes||'')?'ES':'EN', type:/#BODY/.test(r.notes||'')?'Body':'Face',
                dep:/#DEP/.test(r.notes||''), phone:((r.notes||'').match(/#TEL(\d+)/)||[])[1]||'', lsug:lsugOf(r.notes||''), lock:/#LLOCK/.test(r.notes||''), plain:(r.notes||'').replace(TAG_RE,'').trim()};
       html += '<div class="drow'+mStCls(r)+'">'
-        + '<span class="dname" onclick="openRoster(bdate())"><span class="ogtime">'+fmtTime(r.slot)+'</span> '+replyBadge(m.phone)+newBadge(r)+esc(r.client)+histBadge(m.phone)+'</span>'
+        + '<span class="dname" onclick="openRoster(bdate())"><span class="ogtime">'+fmtTime(r.slot)+'</span> '+replyBadge(m.phone)+newBadge(r)+esc(r.client)+histBadge(m.phone)+dcBadge(m.phone)+'</span>'
         + '<span class="dtag src '+(SRC_CLS[r.source]||'')+'">'+esc(r.source||'—')+'</span>'
         + '<span class="dtag dic">'+dIcons(m)+lsugBadge(m, r.slot, r.idx)+'</span>'
         + '<label class="dep'+(m.dep?' on':'')+'" title="Deposit paid"><input type="checkbox" '+(m.dep?'checked':'')
@@ -3146,7 +3146,7 @@ function closeImport(){ document.getElementById('import-modal').classList.remove
    Texts, normal rooms and default send times live in the Sheet (shared by every device).
    Sending, report schedule and status come from the script; secrets (tokens, keys) are never shown or editable here.
    ================================================================ */
-var HUB_EXPECTED_SERVER = '2.1.15';
+var HUB_EXPECTED_SERVER = '2.1.16';
 var APPCFG = (function(){ try{ return JSON.parse(localStorage.getItem('solea_appcfg')||'{}'); }catch(e){ return {}; } })();
 var MSG_ORIG = {}, LOC_ORIG = JSON.parse(JSON.stringify(LOCINFO));
 Object.keys(MESSAGES).forEach(function(id){ MSG_ORIG[id] = {en:MESSAGES[id].en, es:MESSAGES[id].es}; });
@@ -3375,10 +3375,11 @@ function renderSending(){
   }).join('');
   el.innerHTML = '<div class="set-row"><span class="set-pill '+(on?'st-conf':'st-bad')+'">'+(on?'Sending is ON':'Sending is OFF')+'</span>'
     + '<button class="start-btn'+(on?' on':'')+'" onclick="toggleSending()">'+(on?'⛔ Turn sending OFF':'✅ Turn sending ON')+'</button></div>'
-    + '<div class="set-note" style="margin:6px 0 10px">While it is OFF nothing can be sent or scheduled, and messages already scheduled stay on hold. With it ON, lists you send by hand still need your approval; the two automatic messages below go out by themselves.</div>'
+    + '<div class="set-note" style="margin:6px 0 10px">While it is OFF nothing can be sent or scheduled, and messages already scheduled stay on hold. With it ON, lists you send by hand still need your approval; the automatic messages below go out by themselves.</div>'
     + '<div class="set-sub" style="margin-top:14px">Automatic messages <span class="set-note">(sent by the system, no approval needed)</span></div>'
     + autoRow('AUTO_EOD', c.autoEod, 'EOD Reminder', 'Every day at '+sendTimeFor('eod_reminder')+' (Miami) the system texts the clients whose appointment was added to the roster <b>today</b> and is for <b>tomorrow</b>. One text per client.')
     + autoRow('AUTO_NOSHOW', c.autoNoshow, 'No-show follow-up', 'Every hour on the hour, 9 AM to 8 PM (Miami), the system texts every client of <b>today</b> marked <b>No-show</b>. One text per client.')
+    + autoRow('AUTO_TYCONFIRM', c.autoThanks !== false, 'Thank you for confirming (double confirmation)', 'When a client of <b>today</b> answers a clear <b>YES</b> to “Good Morning — double confirmation” or “Didn’t double-confirm yet”, the system sets them <b>Confirmed</b> (if they were pending or Left VM) and texts “Thank you for confirming”. Once per client, 7 AM–8 PM, only before their appointment. Unclear answers (questions, “no”, change of time…) stay in Replies for a person. <b>Brickell only</b> for now.')
     + '<div class="set-note" style="margin:2px 0 10px">They only run while <b>Sending</b> is ON and only for the spas allowed below. Texts come from <b>Messages → ✏ Edit message texts</b>. Everything sent shows in the SENT tab of the Google Sheet as “auto”.</div>'
     + '<div class="set-row"><b>Spas allowed to send:</b> '+chk+'</div>'
     + '<div class="set-row" style="margin-top:10px"><b>Sender number:</b> <input type="text" id="cfg-from" class="set-txt" placeholder="+17864002775 — blank = GHL default" value="'+esc(c.sendFrom||'')+'"> <button class="btn ghost sm" onclick="saveFrom()">Save</button></div>'
@@ -3398,6 +3399,7 @@ function autoRow(key, on, title, desc){
 var SW_INFO = {
   AUTO_EOD:    {f:'autoEod',    name:'The automatic EOD Reminder'},
   AUTO_NOSHOW: {f:'autoNoshow', name:'The automatic No-show follow-up'},
+  AUTO_TYCONFIRM: {f:'autoThanks', name:'The automatic “Thank you for confirming”'},
   OPP_SYNC:    {f:'oppSync',    name:'Opportunity sync', off:'Confirmed clients will no longer be moved to “Appointment Confirmed” in GHL. Nothing already moved is undone.', on:'When a client becomes Confirmed, their GHL opportunity will be moved to “Appointment Confirmed”.'},
   LANG_DETECT: {f:'langDetect', name:'Automatic language detection', off:'New clients keep the default language (EN). You can still change it by hand.', on:'New clients’ language will be set from their last messages in GHL.'},
   ALERTS:      {f:'alerts',     name:'Telegram problem alerts', off:'You will no longer get a Telegram message when something fails.', on:'You will get a Telegram message when something fails (and when it recovers).'}
@@ -5705,7 +5707,9 @@ function loadNoReply(force){
     .then(function(r){ return r.json(); })
     .then(function(d){
       if(d.error){ NR.err = d.error; return; }
-      var last = {};
+      var last = {}, dc = {};
+      (d.sent||[]).forEach(function(x){ if(x.msgId === 'tyconfirm' && x.a === 'auto-dc' && x.t) dc[x.phone] = Date.parse(x.t) || 1; });
+      NR.dc = dc;
       (d.sent||[]).forEach(function(x){
         if(!NR_ASK_IDS[x.msgId] || !x.t) return;
         var ms = Date.parse(x.t); if(!ms) return;
@@ -5716,7 +5720,13 @@ function loadNoReply(force){
       NR.sent = last; NR.date = date; NR.loadedAt = Date.now(); NR.err = '';
     })
     .catch(function(){ NR.err = 'offline'; })
-    .then(function(){ NR.busy = false; renderNoReply(); });
+    .then(function(){ NR.busy = false; if(TAB === 'board') renderBoard(); else renderNoReply(); });   /* board: ✅✅ badges too */
+}
+/* ✅✅ = the client answered YES to today's double-confirmation text; the system confirmed them and sent "Thank you for confirming" */
+function dcBadge(phone){
+  var t = phone && NR.dc && NR.dc[phone];
+  if(!t || NR.date !== todayMiami() || bdate() !== todayMiami()) return '';
+  return '<span class="hb good" title="Double-confirmed (replied YES)'+(t > 1 ? ' · thank-you sent '+nrClock(t) : '')+'">✅✅</span>';
 }
 function nrAgo(ms){ var m = Math.max(0, Math.round((Date.now() - ms)/60000)); return m < 60 ? m+' min' : Math.floor(m/60)+' h'+(m%60 ? ' '+(m%60)+' min' : ''); }
 function nrClock(ms){ return new Date(ms).toLocaleTimeString('en-US',{timeZone:'America/New_York', hour:'numeric', minute:'2-digit'}); }
