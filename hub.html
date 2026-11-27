@@ -244,6 +244,11 @@ input[type=date]{background:#fff;border:1px solid #dfeaea;color:var(--dark);bord
 .nr-tag{font-size:10.5px;font-weight:700;border-radius:6px;padding:1px 6px;background:#eef4f4;color:var(--gray)}
 .nr-tag.vm{background:var(--purple);color:var(--purple-b)}
 .nr-tag.fin{background:var(--red);color:#b23c3c}
+/* Client history badge */
+.hb{display:inline-block;font-size:10.5px;font-weight:800;border-radius:6px;padding:0 6px;margin-left:6px;vertical-align:1px;cursor:help;white-space:nowrap}
+.hb.risk{background:var(--red);color:#b23c3c;border:1px solid var(--red-b)}
+.hb.warn{background:var(--orange);color:#a86a12;border:1px solid var(--orange-b)}
+.hb.good{background:var(--green);color:#2e7d55}
 .prio{display:flex;gap:10px;flex-wrap:wrap}
 .pcard{flex:1;min-width:130px;border:2px solid;border-radius:12px;text-align:center;padding:9px 8px;font-family:'Montserrat',sans-serif}
 .pcard b{display:block;font-size:14px;font-weight:800}
@@ -559,7 +564,7 @@ select.agent option{color:#1c2b33;background:#fff}
     <div class="hrow">
       <div class="brand">
         <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea">
-        <h1>Confirmation Hub 2.1.14 <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
+        <h1>Confirmation Hub 2.1.15 <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
       </div>
       <div class="hctl">
         <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">↻ Refresh</button>
@@ -1425,6 +1430,7 @@ function refreshNow(){
   b.textContent = '↻ Refreshing…';
   loadBoard();                                   /* Day Board + contadores */
   loadNoReply(true);                             /* detector "sin respuesta" */
+  loadHistory(true);                             /* historial de no-shows / cancelaciones */
   if(TAB === 'week') loadWeek();                 /* Week: vuelve a leer los 6 días */
   if(TAB === 'timeline') renderLanes();          /* Timeline: recalcula tareas y cutoffs */
   if(TAB === 'replies') loadReplies();
@@ -1438,6 +1444,7 @@ var loadSeq = 0;
 function loadBoard(){
   /* 1) paint instantly from the local cache */
   loadLocal(); renderBoard(); renderLaneCounts();
+  setTimeout(function(){ loadHistory(); }, 1200);       /* clients of this date not checked yet */
   if(!online()){
     document.getElementById('setup').style.display = 'block';
     setSync('','local · '+hhmmss());
@@ -1626,7 +1633,7 @@ function renderBoard(){
       }
       /* booked client — read-only, except status + deposit which stay one-click */
       html += '<div class="drow'+(i>=s.target?' extra':'')+'">'
-        + '<span class="dname" title="Edit in the roster" onclick="openRoster(bdate())">'+replyBadge(m.phone)+newBadge(r)+esc(r.client)+'</span>'
+        + '<span class="dname" title="Edit in the roster" onclick="openRoster(bdate())">'+replyBadge(m.phone)+newBadge(r)+esc(r.client)+histBadge(m.phone)+'</span>'
         + '<span class="dtag src '+(SRC_CLS[r.source]||'')+'">'+esc(r.source||'—')+'</span>'
         + '<span class="dtag">'+m.type+' · '+m.lang+lsugBadge(m, slot, i)+'</span>'
         + '<label class="dep'+(m.dep?' on':'')+'" title="Deposit paid"><input type="checkbox" '+(m.dep?'checked':'')
@@ -1649,7 +1656,7 @@ function renderBoard(){
       var m = {lang:/#ES/.test(r.notes||'')?'ES':'EN', type:/#BODY/.test(r.notes||'')?'Body':'Face',
                dep:/#DEP/.test(r.notes||''), phone:((r.notes||'').match(/#TEL(\d+)/)||[])[1]||'', lsug:lsugOf(r.notes||''), lock:/#LLOCK/.test(r.notes||''), plain:(r.notes||'').replace(TAG_RE,'').trim()};
       html += '<div class="drow">'
-        + '<span class="dname" onclick="openRoster(bdate())"><span class="ogtime">'+fmtTime(r.slot)+'</span> '+replyBadge(m.phone)+newBadge(r)+esc(r.client)+'</span>'
+        + '<span class="dname" onclick="openRoster(bdate())"><span class="ogtime">'+fmtTime(r.slot)+'</span> '+replyBadge(m.phone)+newBadge(r)+esc(r.client)+histBadge(m.phone)+'</span>'
         + '<span class="dtag src '+(SRC_CLS[r.source]||'')+'">'+esc(r.source||'—')+'</span>'
         + '<span class="dtag">'+m.type+' · '+m.lang+lsugBadge(m, r.slot, r.idx)+'</span>'
         + '<label class="dep'+(m.dep?' on':'')+'" title="Deposit paid"><input type="checkbox" '+(m.dep?'checked':'')
@@ -2470,7 +2477,7 @@ function closeImport(){ document.getElementById('import-modal').classList.remove
    Texts, normal rooms and default send times live in the Sheet (shared by every device).
    Sending, report schedule and status come from the script; secrets (tokens, keys) are never shown or editable here.
    ================================================================ */
-var HUB_EXPECTED_SERVER = '2.1.12';
+var HUB_EXPECTED_SERVER = '2.1.13';
 var APPCFG = (function(){ try{ return JSON.parse(localStorage.getItem('solea_appcfg')||'{}'); }catch(e){ return {}; } })();
 var MSG_ORIG = {}, LOC_ORIG = JSON.parse(JSON.stringify(LOCINFO));
 Object.keys(MESSAGES).forEach(function(id){ MSG_ORIG[id] = {en:MESSAGES[id].en, es:MESSAGES[id].es}; });
@@ -4806,6 +4813,60 @@ window.addEventListener('resize', fitHeader);
 window.addEventListener('load', fitHeader);
 
 /* ================================================================
+   CLIENT HISTORY — past no-shows / cancellations of each client (last 12 months, by phone).
+   Badge next to the name: ⚠ red = 1+ no-show or 2+ cancellations · orange = 1 cancellation ·
+   green ★ = 3+ visits and nothing bad. Hover = details. Data: ?action=history (ROSTER sheet).
+   ================================================================ */
+var HIST = (function(){ try{ var o = JSON.parse(localStorage.getItem('solea_hist')||'{}'); return {data:o.data||{}, day:o.day||'', asked:{}, at:0, busy:false}; }catch(e){ return {data:{}, day:'', asked:{}, at:0, busy:false}; } })();
+function histPhones(){
+  var set = {};
+  [todayMiami(), tomorrowMiami()].forEach(function(d){ localRoster(d).forEach(function(r){ if(r.phone) set[r.phone] = 1; }); });
+  var b = bdate && document.getElementById('bdate') ? bdate() : '';
+  if(b){ var d = readLocal(b, LOC_ID); Object.keys(d.rows).forEach(function(k){ var ph = ((d.rows[k].notes||'').match(/#TEL(\d{10})/)||[])[1]; if(ph) set[ph] = 1; }); }
+  return Object.keys(set);
+}
+function loadHistory(force){
+  if(!online() || !gsKey() || HIST.busy) return;
+  var today = todayMiami();
+  if(HIST.day !== today){ HIST.data = {}; HIST.asked = {}; HIST.day = today; }
+  var all = histPhones(), missing = all.filter(function(ph){ return !HIST.asked[ph]; });
+  var stale = Date.now() - HIST.at > 30*60000;
+  var list = (force || stale) ? all : missing;
+  if(!list.length) return;
+  HIST.busy = true;
+  fetch(WEBAPP_URL+'?action=history&before='+today+'&phones='+list.slice(0,400).join(',')+'&key='+encodeURIComponent(gsKey()))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d || !d.hist) return;
+      list.slice(0,400).forEach(function(ph){ HIST.asked[ph] = 1; HIST.data[ph] = d.hist[ph] || null; });
+      HIST.at = Date.now();
+      try{ localStorage.setItem('solea_hist', JSON.stringify({data:HIST.data, day:HIST.day})); }catch(e){}
+      if(TAB === 'board') renderBoard();
+    })
+    .catch(function(){})
+    .then(function(){ HIST.busy = false; });
+}
+function histShort(d){ var p = d.split('-'); return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+p[1]-1]+' '+(+p[2]); }
+function histBadge(phone){
+  var h = phone && HIST.data[phone];
+  if(!h) return '';
+  var cx = (h.cx||0) + (h.csr||0), ns = h.ns||0, tip = [];
+  tip.push('Last 12 months:');
+  if(ns) tip.push('• '+ns+' no-show'+(ns>1?'s':'')+(h.lastNs ? ' (last '+histShort(h.lastNs)+')' : ''));
+  if(cx) tip.push('• '+cx+' cancellation'+(cx>1?'s':'')+(h.csr ? ' ('+h.csr+' same day, rebooked)' : '')+(h.lastCx ? ' · last '+histShort(h.lastCx) : ''));
+  if(h.rs) tip.push('• '+h.rs+' rescheduled');
+  tip.push('• '+(h.sh||0)+' visit'+(h.sh===1?'':'s')+' (Showed)');
+  var t = esc(tip.join('\n'));
+  if(ns || cx >= 2){
+    var lbl = [ns ? ns+' NS' : '', cx ? cx+' CX' : ''].filter(Boolean).join(' · ');
+    return '<span class="hb risk" title="'+t+'">⚠ '+lbl+'</span>';
+  }
+  if(cx === 1) return '<span class="hb warn" title="'+t+'">1 CX</span>';
+  if((h.sh||0) >= 3) return '<span class="hb good" title="'+t+'">★ '+h.sh+'</span>';
+  return '';
+}
+
+/* ================================================================
    NO-REPLY DETECTOR — today's clients who got a confirmation text, didn't answer,
    and it's been at least nrHours() since that text. Call them before the system cancels.
    Data: SENT (what went out and when, via ?action=sent) + REPLIES (RPL.raw, inbound only).
@@ -4897,7 +4958,7 @@ function renderNoReply(){
         + (fin ? ' · reply window '+(dl < now ? 'ended '+nrClock(dl) : 'ends '+nrClock(dl)) : '');
       return '<div class="nr-row">'
         + '<span class="nr-time">'+fmtTime(r.slot)+'</span>'
-        + '<span class="nr-name">'+esc(r.client)+' <span class="nr-tag">'+LOC_NAME[r.loc]+'</span>'
+        + '<span class="nr-name">'+esc(r.client)+histBadge(r.phone)+' <span class="nr-tag">'+LOC_NAME[r.loc]+'</span>'
         + (r.status === 'Left VM' ? ' <span class="nr-tag vm">VM left</span>' : r.status ? ' <span class="nr-tag">'+esc(r.status)+'</span>' : '')
         + (fin ? ' <span class="nr-tag fin">final warning sent</span>' : '')+'</span>'
         + '<span class="nr-info">'+info+'</span>'
@@ -4930,6 +4991,8 @@ setInterval(tick, 5000);
 setTimeout(loadReplies, 1500);
 setInterval(refreshReplies, 60000);
 setTimeout(function(){ loadNoReply(true); }, 2500);
+setTimeout(function(){ loadHistory(true); }, 4000);
+setInterval(function(){ if(!document.hidden) loadHistory(); }, 60000);
 setInterval(function(){ if(!document.hidden) loadNoReply(); }, 120000);
 setInterval(langScan, 15000);
 renderStationBtn();
