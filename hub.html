@@ -46,6 +46,32 @@ body{padding-top:112px}   /* room for the fixed header (row + tabs) */
 .tabs button:hover{color:#fff}
 .tabs button.active{color:#fff;border-bottom-color:var(--primary);background:rgba(31,200,196,.09)}
 .tabs .badge-n{background:var(--primary);color:#fff;border-radius:10px;padding:0 7px;font-size:11px;margin-left:5px}
+.tabs .ti{font-style:normal}
+.tabs .m-only{display:none}
+/* ===== PHONE (≤760px): tabs + Refresh + Settings in a bottom icon bar; compact one-line header. PC view is untouched. ===== */
+@media(max-width:760px){
+  .hrow{flex-wrap:nowrap;padding:8px 0;gap:8px}
+  .brand{gap:8px;min-width:0}
+  .brand img{height:26px}
+  .brand h1{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hctl{flex-wrap:nowrap;gap:0}
+  .hctl .hbtn{display:none}
+  .clock{min-width:0}
+  .clock .time{font-size:18px}
+  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:70;background:var(--dark);border-top:1px solid #2b3d47;gap:0;
+        padding:0 4px env(safe-area-inset-bottom);box-shadow:0 -3px 14px rgba(0,0,0,.25)}
+  .tabs button{position:relative;padding:9px 0 11px;border-bottom:0;border-top:3px solid transparent;min-width:0}
+  .tabs button.active{border-top-color:var(--primary);border-bottom-color:transparent}
+  .tabs .ti{font-size:21px;line-height:1;display:block}
+  .tabs .tlbl{display:none}
+  .tabs .m-only{display:block}
+  .tabs .m-only .ti{color:#cfe3e2}
+  .tabs .badge-n{position:absolute;top:3px;left:50%;margin-left:6px;padding:0 5px;font-size:10px;line-height:15px;min-width:15px}
+  #m-refresh.spin .ti{animation:mspin .8s linear infinite}
+  body{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+  .toast.show{bottom:calc(78px + env(safe-area-inset-bottom))}
+}
+@keyframes mspin{to{transform:rotate(360deg)}}
 .tabpane{display:none}
 .tabpane.active{display:block}
 
@@ -582,7 +608,7 @@ select.agent option{color:#1c2b33;background:#fff}
     <div class="hrow">
       <div class="brand">
         <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea">
-        <h1>Confirmation Hub 2.1.19 <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
+        <h1>Confirmation Hub 2.1.20 <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
       </div>
       <div class="hctl">
         <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">↻ Refresh</button>
@@ -591,11 +617,14 @@ select.agent option{color:#1c2b33;background:#fff}
       </div>
     </div>
     <div class="tabs">
-      <button id="tab-btn-board"    class="active" onclick="showTab('board')">📋 Day Board <span class="badge-n" id="nr-left" style="display:none;background:#c0392b" title="Clients of today with no reply to the confirmation text"></span></button>
-      <button id="tab-btn-timeline" onclick="showTab('timeline')">⏱ Timeline <span class="badge-n" id="tl-left"></span></button>
-      <button id="tab-btn-week" onclick="showTab('week')">📅 Week</button>
-      <button id="tab-btn-messages" onclick="showTab('messages')">✉ Messages</button>
-      <button id="tab-btn-replies" onclick="showTab('replies')">💬 Replies <span class="badge-n" id="rp-left" style="display:none"></span></button>
+      <button id="tab-btn-board"    class="active" onclick="showTab('board')" title="Day Board"><i class="ti">📋</i><span class="tlbl"> Day Board</span> <span class="badge-n" id="nr-left" style="display:none;background:#c0392b" title="Clients of today with no reply to the confirmation text"></span></button>
+      <button id="tab-btn-timeline" onclick="showTab('timeline')" title="Timeline"><i class="ti">⏱</i><span class="tlbl"> Timeline</span> <span class="badge-n" id="tl-left"></span></button>
+      <button id="tab-btn-week" onclick="showTab('week')" title="Week"><i class="ti">📅</i><span class="tlbl"> Week</span></button>
+      <button id="tab-btn-messages" onclick="showTab('messages')" title="Messages"><i class="ti">✉</i><span class="tlbl"> Messages</span></button>
+      <button id="tab-btn-replies" onclick="showTab('replies')" title="Replies"><i class="ti">💬</i><span class="tlbl"> Replies</span> <span class="badge-n" id="rp-left" style="display:none"></span></button>
+      <!-- phone only: Refresh + Settings move to the bottom bar -->
+      <button class="m-only" id="m-refresh" onclick="refreshNow()" title="Refresh" aria-label="Refresh"><i class="ti">↻</i></button>
+      <button class="m-only" onclick="openSettings()" title="Settings" aria-label="Settings"><i class="ti">⚙</i></button>
     </div>
   </div>
 </header>
@@ -1445,8 +1474,9 @@ function setSync(cls, txt){
   });
 }
 function refreshNow(){
-  var b = document.getElementById('refresh-btn');
+  var b = document.getElementById('refresh-btn'), mb = document.getElementById('m-refresh');
   b.textContent = '↻ Refreshing…';
+  if(mb){ mb.classList.add('spin'); setTimeout(function(){ mb.classList.remove('spin'); }, 1200); }
   loadBoard();                                   /* Day Board + contadores */
   loadNoReply(true);                             /* detector "sin respuesta" */
   loadHistory(true);                             /* historial de no-shows / cancelaciones */
