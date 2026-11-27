@@ -249,6 +249,16 @@ input[type=date]{background:#fff;border:1px solid #dfeaea;color:var(--dark);bord
 .hb.risk{background:var(--red);color:#b23c3c;border:1px solid var(--red-b)}
 .hb.warn{background:var(--orange);color:#a86a12;border:1px solid var(--orange-b)}
 .hb.good{background:var(--green);color:#2e7d55}
+/* Auto-import panel (Day Board) */
+#imp-panel{border-color:var(--orange-b)}
+#imp-panel .nr-head h2{color:#a86a12}
+.imp-card{border-top:1px solid #f0f4f4;padding:8px 0;font-size:12.5px}
+.imp-card:first-of-type{border-top:0}
+.imp-card .imp-top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.imp-card .imp-top b{font-size:13px}
+.imp-card ul{margin:4px 0 0 18px;padding:0;color:var(--dark)}
+.imp-card li{margin:2px 0}
+.imp-card .imp-err{color:#a03636;font-weight:700}
 .prio{display:flex;gap:10px;flex-wrap:wrap}
 .pcard{flex:1;min-width:130px;border:2px solid;border-radius:12px;text-align:center;padding:9px 8px;font-family:'Montserrat',sans-serif}
 .pcard b{display:block;font-size:14px;font-weight:800}
@@ -564,7 +574,7 @@ select.agent option{color:#1c2b33;background:#fff}
     <div class="hrow">
       <div class="brand">
         <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea">
-        <h1>Confirmation Hub 2.1.15 <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
+        <h1>Confirmation Hub 2.1.16 <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
       </div>
       <div class="hctl">
         <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">↻ Refresh</button>
@@ -599,6 +609,7 @@ select.agent option{color:#1c2b33;background:#fff}
     </div>
     <div class="daycap" id="daycap"></div>
     <div class="avail" id="avail"></div>
+    <div class="nr-panel" id="imp-panel" style="display:none"></div>
     <div class="nr-panel" id="nr-panel" style="display:none"></div>
     <div id="board"></div>
   </div>
@@ -869,7 +880,7 @@ select.agent option{color:#1c2b33;background:#fff}
       <div>Name</div><div>Time</div><div>Face / Body</div><div>Lang</div><div>Dep.</div><div>Source</div><div>Phone</div><div>Notes</div><div>Status</div><div></div>
     </div>
     <div id="rz-rows"></div>
-    <div class="rz-hint">Import: Vagaro → Reports → Appointments Summary (.xlsx). Imports into <b id="imp-loc-name">this location</b>. · 📞 Phones: Vagaro → Reports → Customers (Mobile column) — matched to the roster by full name, any location.</div>
+    <div class="rz-hint">Import: Vagaro → Reports → Appointments Summary (.xlsx). Imports into <b id="imp-loc-name">this location</b>. · 📞 Phones: Vagaro → Reports → Customers (Mobile column) — matched to the roster by full name, any location. · 📂 Or just drop both files in the <b>Solea Imports</b> Drive folder (Brickell / Sunny Isles subfolders) — they import by themselves in ~2 min.</div>
     <div class="rz-foot">
       <div class="rz-foot-l">
         <button class="btn ghost sm" onclick="rzAdd()">＋ Add another</button>
@@ -1431,6 +1442,7 @@ function refreshNow(){
   loadBoard();                                   /* Day Board + contadores */
   loadNoReply(true);                             /* detector "sin respuesta" */
   loadHistory(true);                             /* historial de no-shows / cancelaciones */
+  loadImports();                                 /* importación automática (carpeta de Drive) */
   if(TAB === 'week') loadWeek();                 /* Week: vuelve a leer los 6 días */
   if(TAB === 'timeline') renderLanes();          /* Timeline: recalcula tareas y cutoffs */
   if(TAB === 'replies') loadReplies();
@@ -1599,7 +1611,7 @@ function offGridRows(){
   return out.sort(function(a,b){ return slotMins(a.slot) - slotMins(b.slot); });
 }
 function renderBoard(){
-  renderAvail(); renderNoReply();
+  renderAvail(); renderNoReply(); renderImports();
   var html='';
   SLOTS[LOC_ID].forEach(function(slot){
     var s = slotStats(slot), count = s.target;
@@ -2477,7 +2489,7 @@ function closeImport(){ document.getElementById('import-modal').classList.remove
    Texts, normal rooms and default send times live in the Sheet (shared by every device).
    Sending, report schedule and status come from the script; secrets (tokens, keys) are never shown or editable here.
    ================================================================ */
-var HUB_EXPECTED_SERVER = '2.1.13';
+var HUB_EXPECTED_SERVER = '2.1.14';
 var APPCFG = (function(){ try{ return JSON.parse(localStorage.getItem('solea_appcfg')||'{}'); }catch(e){ return {}; } })();
 var MSG_ORIG = {}, LOC_ORIG = JSON.parse(JSON.stringify(LOCINFO));
 Object.keys(MESSAGES).forEach(function(id){ MSG_ORIG[id] = {en:MESSAGES[id].en, es:MESSAGES[id].es}; });
@@ -2900,6 +2912,9 @@ function renderStatus(){
       rows += statRow(d.auto.noshow ? (d.sending.enabled ? true : null) : null, 'Auto No-show follow-up', (d.auto.noshow ? 'ON · hourly 9 AM–8 PM' : 'OFF')+fmtL('noshow_15')
         + (d.auto.error ? ' · <span style="color:#a03636">'+esc(d.auto.error)+'</span>' : ''));
     }
+    if(d.imports){ rows += statRow(!d.imports.configured ? null : (d.imports.error ? null : (d.imports.on ? true : null)), 'Auto-import (Drive folder)',
+        (!d.imports.configured ? 'not set up — run importSetup() in the Apps Script editor' : (d.imports.on ? 'ON · checks Solea Imports every ~2 min' : 'PAUSED (IMPORT_AUTO = false)'))
+        + (d.imports.last ? ' · last check '+rpAgo(d.imports.last) : '') + (d.imports.error ? ' · <span style="color:#a03636">'+esc(d.imports.error.slice(0,160))+'</span>' : '')); }
     rows += statRow(true, 'Scheduled messages', d.scheduled.pending ? d.scheduled.pending+' pending · next '+schedWhen(d.scheduled.next) : 'none pending');
     rows += statRow(d.telegram.configured, 'Telegram', d.telegram.configured ? 'bot configured' : 'bot token or chat id missing');
     var stationOn = d.reports.stationSeen && (Date.now() - Date.parse(d.reports.stationSeen)) < 4*60000;
@@ -4199,6 +4214,7 @@ function phonesCommit(){
   var dir = phoneDirRead();
   IMPP.dir.forEach(function(x){ dir[nameFull(x.full)] = x.phone; });
   localStorage.setItem('solea_phones', JSON.stringify(dir));
+  phoneDirPush(IMPP.dir);                                   /* shared directory: every device + the Drive auto-import */
   var byKey = {}, changed = [], n = 0;
   IMPP.rows.forEach(function(it){
     if(!it.apply || !it.cand) return;
@@ -4813,6 +4829,82 @@ window.addEventListener('resize', fitHeader);
 window.addEventListener('load', fitHeader);
 
 /* ================================================================
+   AUTO-IMPORT (Google Drive folder "Solea Imports") — the server imports the Vagaro files by itself.
+   This panel only shows imports that need a human look: time changed, not in the file,
+   partial-name phones, or a file that could not be imported. "✓ Reviewed" hides it on every device.
+   Also: the phone directory is shared through the server (sheet PHONES).
+   ================================================================ */
+var IMPS = {rows:[], at:0, busy:false, newest:'', open:true};
+IMPS.open = localStorage.getItem('solea_imp_open') !== '0';
+function impToggle(){ IMPS.open = !IMPS.open; localStorage.setItem('solea_imp_open', IMPS.open ? '1' : '0'); renderImports(); }
+function loadImports(){
+  if(!online() || !gsKey() || IMPS.busy) return;
+  IMPS.busy = true;
+  fetch(WEBAPP_URL+'?action=imports&key='+encodeURIComponent(gsKey()))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d || !Array.isArray(d.rows)) return;
+      var newest = d.rows.reduce(function(m, r){ return r.at > m ? r.at : m; }, '');
+      var fresh = IMPS.newest && newest > IMPS.newest;
+      IMPS.rows = d.rows; IMPS.at = Date.now(); IMPS.newest = newest;
+      if(fresh){                                   /* a file was just imported: pull the roster again */
+        var nw = d.rows.filter(function(r){ return r.at > (IMPS.prev||''); });
+        if(nw.length) toast('📥 Auto-import: '+nw.map(function(r){ return r.kind==='phones' ? 'phones' : (LOC_NAME[r.loc]||r.loc); }).join(', ')+' — roster updated');
+        loadBoard(); renderLaneCounts(); if(TAB==='week') loadWeek();
+        if(nw.some(function(r){ return r.kind === 'phones'; })) loadPhoneDir();
+      }
+      IMPS.prev = newest;
+    })
+    .catch(function(){})
+    .then(function(){ IMPS.busy = false; renderImports(); });
+}
+function impSeen(id){
+  IMPS.rows.forEach(function(r){ if(r.id === id) r.seen = true; });
+  renderImports();
+  if(!online()) return;
+  fetch(WEBAPP_URL, {method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(withKey({action:'importseen', id:id, agent:AGENT}))}).catch(function(){});
+}
+function impWhenTxt(iso){ var d = new Date(iso); return d.toLocaleString('en-US',{timeZone:'America/New_York', weekday:'short', hour:'numeric', minute:'2-digit'}); }
+function renderImports(){
+  var el = document.getElementById('imp-panel'); if(!el) return;
+  var list = IMPS.rows.filter(function(r){ return !r.seen && (r.status === 'review' || r.status === 'error'); }).reverse();
+  if(!online() || !list.length){ el.style.display = 'none'; return; }
+  var html = '<div class="nr-head" onclick="impToggle()"><h2>📥 Auto-import '+(IMPS.open?'▾':'▸')+'</h2><span class="nr-sub">'+list.length+' file'+(list.length===1?'':'s')+' to review · Solea Imports folder</span></div>';
+  if(IMPS.open) html += list.map(function(r){
+    var rv = r.review || {}, li = [];
+    if(r.status === 'error') li.push('<li class="imp-err">Not imported: '+esc(rv.error || r.summary)+' <span style="color:var(--gray);font-weight:400">— the file is in Solea Imports → Errors</span></li>');
+    (rv.moved||[]).forEach(function(x){ li.push('<li>⏱ <b>'+esc(x.name)+'</b> — '+fmtDate(x.date)+' at '+fmtTime(x.slot)+' in Vagaro, but on the roster at '+esc(x.note)+'. Fix the time (✎) or set the old row to Rescheduled.</li>'); });
+    (rv.missing||[]).forEach(function(x){ li.push('<li>❓ <b>'+esc(x.name)+'</b> — '+fmtDate(x.date)+' '+fmtTime(x.slot)+' is on the roster but NOT in the file. Canceled or moved in Vagaro?</li>'); });
+    (rv.phonesCheck||[]).forEach(function(x){ li.push('<li>📞 <b>'+esc(x.name)+'</b> ('+fmtDate(x.date)+' · '+(LOC_NAME[x.loc]||x.loc)+') — only part of the name matches: '+esc(x.cand)+'. Add it by hand if it is her.</li>'); });
+    if(rv.noPhone) li.push('<li style="color:var(--gray)">'+rv.noPhone+' new client'+(rv.noPhone===1?'':'s')+' without a phone yet — drop the Vagaro Customers report in the folder too.</li>');
+    return '<div class="imp-card"><div class="imp-top"><b>'+(r.kind==='phones' ? '📞 Phones' : esc(LOC_NAME[r.loc]||r.loc||'?'))+'</b>'
+      + '<span class="nr-tag">'+esc(r.file)+'</span><span style="color:var(--gray)">'+impWhenTxt(r.at)+'</span>'
+      + (r.status !== 'error' ? '<span style="color:var(--gray)">· '+esc(r.summary)+'</span>' : '')
+      + '<button class="btn ghost sm" style="margin-left:auto" onclick="impSeen(\''+esc(r.id)+'\')">✓ Reviewed</button></div>'
+      + (li.length ? '<ul>'+li.join('')+'</ul>' : '') + '</div>';
+  }).join('');
+  el.innerHTML = html;
+  el.style.display = '';
+}
+/* shared phone directory: server → this device (server numbers win), and the 📞 Import phones button → server */
+function loadPhoneDir(){
+  if(!online() || !gsKey()) return;
+  fetch(WEBAPP_URL+'?action=phonedir&key='+encodeURIComponent(gsKey()))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d || !d.dir) return;
+      var dir = phoneDirRead(), n = 0;
+      Object.keys(d.dir).forEach(function(k){ if(dir[k] !== d.dir[k]){ dir[k] = d.dir[k]; n++; } });
+      if(n) localStorage.setItem('solea_phones', JSON.stringify(dir));
+    }).catch(function(){});
+}
+function phoneDirPush(list){
+  if(!online() || !list || !list.length) return;
+  var entries = list.map(function(x){ return {full:x.full, phone:x.phone}; });
+  fetch(WEBAPP_URL, {method:'POST', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(withKey({action:'phonedirset', agent:AGENT, entries:entries}))}).catch(function(){});
+}
+
+/* ================================================================
    CLIENT HISTORY — past no-shows / cancellations of each client (last 12 months, by phone).
    Badge next to the name: ⚠ red = 1+ no-show or 2+ cancellations · orange = 1 cancellation ·
    green ★ = 3+ visits and nothing bad. Hover = details. Data: ?action=history (ROSTER sheet).
@@ -4992,6 +5084,8 @@ setTimeout(loadReplies, 1500);
 setInterval(refreshReplies, 60000);
 setTimeout(function(){ loadNoReply(true); }, 2500);
 setTimeout(function(){ loadHistory(true); }, 4000);
+setTimeout(loadImports, 3000); setTimeout(loadPhoneDir, 5000);
+setInterval(function(){ if(!document.hidden) loadImports(); }, 90000);
 setInterval(function(){ if(!document.hidden) loadHistory(); }, 60000);
 setInterval(function(){ if(!document.hidden) loadNoReply(); }, 120000);
 setInterval(langScan, 15000);
