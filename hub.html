@@ -651,6 +651,15 @@ select.agent option{color:#1c2b33;background:#fff}
 @keyframes swl{from{transform:translateX(40px);opacity:.4}to{transform:none;opacity:1}}
 @keyframes swr{from{transform:translateX(-40px);opacity:.4}to{transform:none;opacity:1}}
 @media(prefers-reduced-motion:reduce){.tabpane.swl,.tabpane.swr{animation:none}}
+/* ===== v2.3.3 — footer always at the bottom of the screen ===== */
+header ~ .container{min-height:calc(100vh - 190px)}
+footer b{color:#cfe3e2;font-weight:700}
+footer .ft-l,footer .ft-r{display:inline-block}
+@media(max-width:760px){
+  header ~ .container{min-height:calc(100vh - 205px);min-height:calc(100dvh - 205px)}
+  footer{font-size:11px;line-height:1.6;padding:12px 16px}
+  footer .ft-l,footer .ft-r{display:block}
+}
 /* ===== v2.3.2 — send queue ("Start sending") redesign, PC + phone ===== */
 #send-modal .modal{max-width:640px}
 #send-modal .modal > .close-x{display:none}
@@ -954,7 +963,7 @@ button.sqp{cursor:pointer}
     <div class="hrow">
       <div class="brand">
         <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea">
-        <h1 title="Confirmation Hub 2.3.2">Confirmation Hub <span class="hver">2.3.2</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
+        <h1 title="Confirmation Hub 2.3.3">Confirmation Hub <span class="hver">2.3.3</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
       </div>
       <div class="hctl">
         <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">🔄 Refresh</button>
@@ -1301,7 +1310,7 @@ button.sqp{cursor:pointer}
 
 <div class="toast" id="toast"></div>
 
-<footer>Solea Medical Spa — Confirmation Hub · internal use only</footer>
+<footer><span class="ft-l"><b>Solea Confirmation Hub</b> · Designed &amp; developed by <b>Andres F</b></span> <span class="ft-r">© 2026 · All rights reserved · For internal use by Solea Medical Spa</span></footer>
 
 <script>
 /* Solea Confirmation Hub
