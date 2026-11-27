@@ -965,7 +965,7 @@ button.sqp{cursor:pointer}
     <div class="hrow">
       <div class="brand">
         <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea">
-        <h1 title="Confirmation Hub 2.3.6">Confirmation Hub <span class="hver">2.3.6</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
+        <h1 title="Confirmation Hub 2.3.7">Confirmation Hub <span class="hver">2.3.7</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
       </div>
       <div class="hctl">
         <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">🔄 Refresh</button>
@@ -3146,7 +3146,7 @@ function closeImport(){ document.getElementById('import-modal').classList.remove
    Texts, normal rooms and default send times live in the Sheet (shared by every device).
    Sending, report schedule and status come from the script; secrets (tokens, keys) are never shown or editable here.
    ================================================================ */
-var HUB_EXPECTED_SERVER = '2.1.17';
+var HUB_EXPECTED_SERVER = '2.1.18';
 var APPCFG = (function(){ try{ return JSON.parse(localStorage.getItem('solea_appcfg')||'{}'); }catch(e){ return {}; } })();
 var MSG_ORIG = {}, LOC_ORIG = JSON.parse(JSON.stringify(LOCINFO));
 Object.keys(MESSAGES).forEach(function(id){ MSG_ORIG[id] = {en:MESSAGES[id].en, es:MESSAGES[id].es}; });
@@ -3390,6 +3390,7 @@ function renderSending(){
     + autoRow('LANG_DETECT', c.langDetect, 'Automatic language detection', 'Sets a new client’s language from their last messages in GHL (manual changes are never overwritten).')
     + '<div class="set-row" style="margin:-2px 0 10px 0"><button class="btn ghost sm" id="lang-refresh" onclick="langRefresh()">🔄 Refresh Language</button><span class="set-note" id="lang-refresh-note" style="margin-left:8px">Re-reads today’s and tomorrow’s clients’ messages now and updates their language (clients you set by hand stay as they are).</span></div>'
     + '<div id="lang-lock-list" style="margin:-4px 0 12px">'+langLockHtml()+'</div>'
+    + autoRow('REPLY_ALERTS', c.replyAlerts !== false, 'Telegram: replies that need attention', c.telegram ? 'A Telegram message when a client of the <b>Brickell</b> roster (yesterday · today · tomorrow) writes something a person should see: 🔴 cancel / change time / running late with an appointment <b>today</b> · 🟡 questions and changes for another day. Clear YES answers are handled by the automatic texts and do not alert. Only messages received 9 AM–6 PM (Miami); one alert per message.' : '<span style="color:#a03636">Telegram is not set up yet (TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID).</span>')
     + autoRow('ALERTS', c.alerts, 'Telegram problem alerts', c.telegram ? 'A Telegram message when GHL, the automatic texts, opportunities or sending fail, and another when it works again. One per problem (repeats at most every 6 h).' : '<span style="color:#a03636">Telegram is not set up yet (TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID) — alerts cannot be sent.</span>');
 }
 function autoRow(key, on, title, desc){
@@ -3404,6 +3405,7 @@ var SW_INFO = {
   AUTO_CONFLONG:  {f:'autoNextDay', name:'The automatic “Confirmed — full details (next day)”'},
   OPP_SYNC:    {f:'oppSync',    name:'Opportunity sync', off:'Confirmed clients will no longer be moved to “Appointment Confirmed” in GHL. Nothing already moved is undone.', on:'When a client becomes Confirmed, their GHL opportunity will be moved to “Appointment Confirmed”.'},
   LANG_DETECT: {f:'langDetect', name:'Automatic language detection', off:'New clients keep the default language (EN). You can still change it by hand.', on:'New clients’ language will be set from their last messages in GHL.'},
+  REPLY_ALERTS: {f:'replyAlerts', name:'Telegram alerts for replies', off:'You will no longer get a Telegram message when a roster client writes something that needs attention.', on:'You will get a Telegram message when a Brickell roster client writes something that needs attention (9 AM–6 PM).'},
   ALERTS:      {f:'alerts',     name:'Telegram problem alerts', off:'You will no longer get a Telegram message when something fails.', on:'You will get a Telegram message when something fails (and when it recovers).'}
 };
 function toggleAuto(key){
