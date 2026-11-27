@@ -574,7 +574,7 @@ select.agent option{color:#1c2b33;background:#fff}
     <div class="hrow">
       <div class="brand">
         <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea">
-        <h1>Confirmation Hub 2.1.16 <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
+        <h1>Confirmation Hub 2.1.17 <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
       </div>
       <div class="hctl">
         <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">↻ Refresh</button>
@@ -2489,7 +2489,7 @@ function closeImport(){ document.getElementById('import-modal').classList.remove
    Texts, normal rooms and default send times live in the Sheet (shared by every device).
    Sending, report schedule and status come from the script; secrets (tokens, keys) are never shown or editable here.
    ================================================================ */
-var HUB_EXPECTED_SERVER = '2.1.14';
+var HUB_EXPECTED_SERVER = '2.1.15';
 var APPCFG = (function(){ try{ return JSON.parse(localStorage.getItem('solea_appcfg')||'{}'); }catch(e){ return {}; } })();
 var MSG_ORIG = {}, LOC_ORIG = JSON.parse(JSON.stringify(LOCINFO));
 Object.keys(MESSAGES).forEach(function(id){ MSG_ORIG[id] = {en:MESSAGES[id].en, es:MESSAGES[id].es}; });
@@ -4875,6 +4875,7 @@ function renderImports(){
     if(r.status === 'error') li.push('<li class="imp-err">Not imported: '+esc(rv.error || r.summary)+' <span style="color:var(--gray);font-weight:400">— the file is in Solea Imports → Errors</span></li>');
     (rv.moved||[]).forEach(function(x){ li.push('<li>⏱ <b>'+esc(x.name)+'</b> — '+fmtDate(x.date)+' at '+fmtTime(x.slot)+' in Vagaro, but on the roster at '+esc(x.note)+'. Fix the time (✎) or set the old row to Rescheduled.</li>'); });
     (rv.missing||[]).forEach(function(x){ li.push('<li>❓ <b>'+esc(x.name)+'</b> — '+fmtDate(x.date)+' '+fmtTime(x.slot)+' is on the roster but NOT in the file. Canceled or moved in Vagaro?</li>'); });
+    (rv.conflict||[]).forEach(function(x){ li.push('<li>⚠ <b>'+esc(x.name)+'</b> — '+fmtDate(x.date)+' '+fmtTime(x.slot)+' is <b>Confirmed in Vagaro</b> but <b>'+esc(x.status)+'</b> in the hub. Check which one is right.</li>'); });
     (rv.phonesCheck||[]).forEach(function(x){ li.push('<li>📞 <b>'+esc(x.name)+'</b> ('+fmtDate(x.date)+' · '+(LOC_NAME[x.loc]||x.loc)+') — only part of the name matches: '+esc(x.cand)+'. Add it by hand if it is her.</li>'); });
     if(rv.noPhone) li.push('<li style="color:var(--gray)">'+rv.noPhone+' new client'+(rv.noPhone===1?'':'s')+' without a phone yet — drop the Vagaro Customers report in the folder too.</li>');
     return '<div class="imp-card"><div class="imp-top"><b>'+(r.kind==='phones' ? '📞 Phones' : esc(LOC_NAME[r.loc]||r.loc||'?'))+'</b>'
