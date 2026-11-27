@@ -73,7 +73,7 @@ body{padding-top:112px}   /* room for the fixed header (row + tabs) */
 }
 @keyframes mspin{to{transform:rotate(360deg)}}
 /* phone-only elements: hidden on PC; wrappers that don't exist for the PC layout */
-.mstat,.mtg,.av .mt,.mline,.mnote,.thide,.tl-hidbtn{display:none}
+.mstat,.mtg,.av .mt,.mline,.mnote,.thide,.tl-hidbtn,.wk-mh,table.wk th .wkm,.rz-subm,.rz-mt{display:none}
 .ttask .tx,.ttask .txi{display:contents}
 .tabpane{display:none}
 .tabpane.active{display:block}
@@ -662,6 +662,78 @@ select.agent option{color:#1c2b33;background:#fff}
   .showhid .ttask.hid{display:flex;opacity:.55}
   .tl-hidbtn{display:block;width:100%;margin-top:6px;background:#f2f7f7;border:1px dashed #cfe3e2;border-radius:10px;padding:9px;font-size:12.5px;font-weight:700;color:var(--gray);cursor:pointer}
 }
+/* ===== PHONE (≤760px) v2.2.1: Week fits 6 days · roster editor full screen ===== */
+@media(max-width:760px){
+  /* Week tab */
+  #tab-week .msgbar{flex-wrap:nowrap;gap:6px;margin:10px 0 0}
+  #tab-week .msgbar .wk-help,#wk-sync{display:none}
+  #tab-week .msgbar .btn.sm{flex:1 1 auto;padding:8px 6px;font-size:11.5px;white-space:nowrap}
+  #weekgrid .wk-card{padding:8px 5px 8px;border-radius:12px;margin-top:8px}
+  #weekgrid .rep-h{margin-bottom:6px;padding:0 3px 6px}
+  #weekgrid .rep-h h2,#weekgrid .rep-h .date,#weekgrid .rep-h .sub{display:none}
+  #weekgrid .rep-h h2.wk-mh{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #weekgrid table.wk{table-layout:fixed;border-spacing:2px}
+  #weekgrid table.wk th{font-size:10px;padding:4px 0;border-radius:6px;line-height:1.2}
+  #weekgrid table.wk th .wkd{display:none}
+  #weekgrid table.wk th .wkm{display:inline}
+  #weekgrid table.wk th.wk-t,#weekgrid table.wk td.wk-t{width:40px;font-size:10.5px;padding:4px 0}
+  #weekgrid table.wk td{min-width:0;padding:4px 0;font-size:12px;border-radius:6px;line-height:1.15}
+  #weekgrid table.wk td b{font-size:14px}
+  #weekgrid table.wk td span{font-size:9.5px}
+  #weekgrid table.wk td i{font-size:9.5px}
+  #weekgrid .wk-legend{flex-wrap:nowrap;gap:8px;font-size:10.5px;margin-top:7px;padding:0 3px;white-space:nowrap}
+  #weekgrid .wk-legend i.k{width:10px;height:10px;margin-right:3px}
+  #weekgrid .wkl{display:none}
+  /* roster editor: full screen, header + buttons fixed, only the list scrolls */
+  #roster-modal{padding:0;align-items:stretch}
+  #roster-modal .modal{max-width:none;width:100%;height:100%;max-height:none;border-radius:0;padding:0 10px;display:flex;flex-direction:column;overflow:hidden;animation:none}
+  #roster-modal .close-x{top:2px;right:4px;width:44px;height:44px;font-size:26px}
+  #roster-modal .tp-title{flex:0 0 auto;padding:12px 44px 0 2px;font-size:15px;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #roster-modal .rz-ctl{flex:0 0 auto;flex-wrap:nowrap!important;gap:5px!important;margin-bottom:6px!important}
+  #roster-modal .rz-locsw{flex:0 0 auto}
+  #roster-modal .rz-locsw button{padding:7px 6px;font-size:10.5px}
+  #roster-modal #rz-date{flex:1 1 auto;min-width:88px;width:0;padding:6px 4px;font-size:11.5px}
+  #roster-modal .rz-ctl .btn.sm{flex:0 0 auto;padding:7px 5px;font-size:10.5px}
+  #roster-modal #rz-sub{flex:0 0 auto;font-size:12px;margin-bottom:4px}
+  #roster-modal .rz-subd{display:none}
+  #roster-modal .rz-subm{display:inline}
+  #roster-modal .rz-head,#roster-modal .rz-hint{display:none}
+  #roster-modal #rz-rows{flex:1 1 auto;min-height:0;overflow-y:auto;margin:0 -10px;padding:0 10px 6px;-webkit-overflow-scrolling:touch}
+  #roster-modal .rz-gh{margin:10px 0 5px}
+  #roster-modal .rz-foot{position:static;flex:0 0 auto;margin:0 -10px;padding:7px 10px calc(8px + env(safe-area-inset-bottom));flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:6px}
+  #roster-modal .rz-foot-l,#roster-modal .rz-foot-r{flex-wrap:nowrap;gap:5px}
+  #roster-modal .rz-foot-l{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}   /* swipe for the import buttons */
+  #roster-modal .rz-foot-l::-webkit-scrollbar{display:none}
+  #roster-modal .rz-foot-l .btn{flex:0 0 auto;padding:8px 11px;font-size:11px;white-space:nowrap}
+  #roster-modal .rz-foot-l,#roster-modal .rz-foot-r{min-width:0}
+  #roster-modal .rz-foot-r .btn{flex:1 1 auto;min-width:0;padding:10px 6px;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #roster-modal .rz-foot-r .btn.ghost{flex:0 0 auto;padding:10px 12px}
+  /* each client = small card: name + time · phone + status · Face/Body, language, deposit, source, delete · notes */
+  #roster-modal .rz-grid:not(.rz-head){grid-template-columns:42px 42px 42px 1fr 50px 40px;
+    grid-template-areas:"nm nm nm nm tm tm" "ph ph ph st st st" "mt mt dp sr sr dl" "nt nt nt nt nt nt";
+    gap:5px;padding:7px 6px 7px 12px;margin-bottom:7px;border:1px solid #e6eeee;background:#fff}
+  #roster-modal .rz-grid > :nth-child(1){grid-area:nm}
+  #roster-modal .rz-grid > :nth-child(2){grid-area:tm}
+  #roster-modal .rz-grid > :nth-child(3),#roster-modal .rz-grid > :nth-child(4){display:none}
+  #roster-modal .rz-grid > :nth-child(5){grid-area:dp}
+  #roster-modal .rz-grid > :nth-child(6){grid-area:sr}
+  #roster-modal .rz-grid > :nth-child(7){grid-area:ph}
+  #roster-modal .rz-grid > :nth-child(8){grid-area:nt}
+  #roster-modal .rz-grid > :nth-child(9){grid-area:st}
+  #roster-modal .rz-grid > :nth-child(10){grid-area:dl;height:40px}
+  #roster-modal .rz-grid > .rz-mt{grid-area:mt;display:flex;gap:5px;align-items:center}
+  #roster-modal .rz-grid input,#roster-modal .rz-grid select{min-height:40px;font-size:14px;padding:7px 7px}
+  #roster-modal .rz-grid > :nth-child(1){font-weight:700}
+  #roster-modal .rz-grid > :nth-child(8){min-height:34px;font-size:12.5px;font-style:italic}
+  #roster-modal .rz-grid .rz-other input{min-height:40px}
+  #roster-modal .rz-tg{flex:0 0 42px;height:40px;border:1px solid #dfeaea;border-radius:10px;background:#fff;font-size:19px;line-height:1;cursor:pointer;padding:0}
+  #roster-modal .rz-mt .lsug{font-size:10.5px}
+  #roster-modal .rz-grid .dep{height:40px;border-radius:10px}
+  #roster-modal .rz-grid .dep span{font-size:0}
+  #roster-modal .rz-grid .dep span::after{content:'💲';font-size:18px;filter:grayscale(1);opacity:.3}
+  #roster-modal .rz-grid .dep.on{background:var(--green);border-color:var(--green-b)}
+  #roster-modal .rz-grid .dep.on span::after{filter:none;opacity:1}
+}
 @media(max-width:760px) and (prefers-reduced-motion:reduce){
   .ttask .tx{transition:none}
   .ttask.current{animation:none}
@@ -692,7 +764,7 @@ select.agent option{color:#1c2b33;background:#fff}
     <div class="hrow">
       <div class="brand">
         <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea">
-        <h1 title="Confirmation Hub 2.2.0">Confirmation Hub <span class="hver">2.2.0</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
+        <h1 title="Confirmation Hub 2.2.1">Confirmation Hub <span class="hver">2.2.1</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
       </div>
       <div class="hctl">
         <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">🔄 Refresh</button>
@@ -776,7 +848,7 @@ select.agent option{color:#1c2b33;background:#fff}
   <!-- ============ WEEK ============ -->
   <div class="tabpane" id="tab-week">
     <div class="msgbar">
-      <span style="font-size:12.5px;color:var(--gray)">Next 6 days for <b id="wk-loc-name">Brickell</b> — switch location in ⚙ Settings.</span>
+      <span class="wk-help" style="font-size:12.5px;color:var(--gray)">Next 6 days for <b id="wk-loc-name">Brickell</b> — switch location in ⚙ Settings.</span>
       <button class="btn primary sm" onclick="openRoster(todayMiami())">＋ Fill a day</button>
       <button class="btn dark sm" id="wk-copy" onclick="copyWeekText()">📋 Copy as text</button>
       <button class="btn ghost sm" onclick="loadWeek()">↻ Refresh</button>
@@ -987,7 +1059,7 @@ select.agent option{color:#1c2b33;background:#fff}
   <div class="modal wide">
     <button class="close-x" onclick="closeRoster()">×</button>
     <div class="tp-title" id="rz-title">Roster</div>
-    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+    <div class="rz-ctl" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
       <div class="switch rz-locsw">
         <button id="rz-loc-b" onclick="rzGoLoc('brickell')">Brickell</button>
         <button id="rz-loc-s" onclick="rzGoLoc('sunny')">Sunny Isles</button>
@@ -2243,7 +2315,8 @@ function rzGoLoc(l){
 function rzLoad(){
   var d = RZ.date, loc = RZ.loc;
   var label = d===todayMiami() ? 'Today' : (d===tomorrowMiami() ? 'Tomorrow' : fmtDate(d));
-  document.getElementById('rz-title').textContent = 'Roster — ' + label + ' · ' + LOC_NAME[loc];
+  document.getElementById('rz-title').textContent = isMobile() ? 'Roster · ' + (label === 'Today' ? 'Today' : wkShortDay(d)) + ' ' + (+d.split('-')[2]) + ' · ' + LOC_NAME[loc]
+                                                                 : 'Roster — ' + label + ' · ' + LOC_NAME[loc];
   document.getElementById('rz-date').value = d;
   document.getElementById('rz-loc-b').classList.toggle('active', loc==='brickell');
   document.getElementById('rz-loc-s').classList.toggle('active', loc==='sunny');
@@ -2259,9 +2332,9 @@ function rzLoad(){
               src:{loc:loc, slot:r.slot, idx:r.idx}};
     });
     rzBlank();                                   /* una sola fila en blanco; "＋ Add another" para más */
-    document.getElementById('rz-sub').textContent =
-      LOC_NAME[loc] + ' · ' + list.length + ' client' + (list.length===1?'':'s') + ' on this day'
-      + ' — switch location above to fill the other spa';
+    document.getElementById('rz-sub').innerHTML =
+      '<span class="rz-subd">' + esc(LOC_NAME[loc] + ' · ' + list.length + ' client' + (list.length===1?'':'s') + ' on this day'
+      + ' — switch location above to fill the other spa') + '</span><span class="rz-subm">' + list.length + ' client' + (list.length===1?'':'s') + '</span>';
     rzRender();
   });
 }
@@ -2318,6 +2391,11 @@ function rzRowHtml(r,i){
       + '<input type="text" placeholder="Notes" value="'+esc(r.notes)+'" oninput="rzSet('+i+',\'notes\',this.value)">'
       + '<select onchange="rzSet('+i+',\'status\',this.value)">'+opts(STATUSES, r.status)+'</select>'
       + '<button class="rz-del" onclick="rzDel('+i+')">×</button>'
+      + '<span class="rz-mt">'                                  /* phone only: one-tap Face/Body and language toggles */
+        + '<button type="button" class="rz-tg" title="Face / Body — tap to switch" onclick="rzSet('+i+',\'type\',\''+(r.type==='Body'?'Face':'Body')+'\');rzRender()">'+(r.type==='Body'?'💪':'🧖')+'</button>'
+        + '<button type="button" class="rz-tg" title="Language — tap to switch" onclick="rzSet('+i+',\'lang\',\''+(r.lang==='ES'?'EN':'ES')+'\');rzRender()">'+(r.lang==='ES'?'🇪🇸':'🇺🇸')+'</button>'
+        + (lsugOf(r.lx) && !/#LLOCK/.test(r.lx||'') && lsugOf(r.lx) !== r.lang ? '<b class="lsug" title="Suggested from this client’s messages — tap to use it" onclick="rzLsug('+i+')">?'+lsugOf(r.lx)+'</b>' : '')
+      + '</span>'
       + '</div>';
 }
 /* Filas guardadas agrupadas por horario; las filas nuevas (sin guardar) van aparte, al final,
@@ -4818,16 +4896,23 @@ function weekCell(date, slot, locOverride){
   var cap = Math.max(0, t - blocked);
   return {cap:cap, target:t, booked:list.length, confirmed:conf, blocked:blocked};
 }
+/* phone labels for the Week tab: "Sat" (short weekday) and "Nov 27 → Dec 2" */
+function wkShortDay(d){ var p = d.split('-'); return new Date(+p[0], +p[1]-1, +p[2]).toLocaleDateString('en-US',{weekday:'short'}); }
+function wkShortRange(a, b){
+  function md(d){ var p = d.split('-'); return new Date(+p[0], +p[1]-1, +p[2]).toLocaleDateString('en-US',{month:'short', day:'numeric'}); }
+  return md(a) + ' → ' + md(b);
+}
 /* the week card for one location — used by the Week tab and by the report pack */
 function weekCardHtml(loc, clickable){
   var slots = SLOTS[loc];
-  var html = '<div class="wk-card"><div class="rep-h"><div><h2>📅 '+LOC_NAME[loc]+' — '+(WEEK.days[0]===todayMiami() ? 'next 6 days' : '6 days from '+fmtDate(WEEK.days[0]))+'</h2><span class="date">'+fmtDate(WEEK.days[0])+' → '+fmtDate(WEEK.days[5])+'</span></div>'
+  var html = '<div class="wk-card"><div class="rep-h"><div><h2 class="wk-mh">'+LOC_NAME[loc]+' · '+wkShortRange(WEEK.days[0], WEEK.days[5])+'</h2><h2>📅 '+LOC_NAME[loc]+' — '+(WEEK.days[0]===todayMiami() ? 'next 6 days' : '6 days from '+fmtDate(WEEK.days[0]))+'</h2><span class="date">'+fmtDate(WEEK.days[0])+' → '+fmtDate(WEEK.days[5])+'</span></div>'
     + '<div class="sub">'+weekStamp()+'</div></div>';
   html += '<table class="wk"><tr><th class="wk-t">Time</th>';
   WEEK.days.forEach(function(d,i){
     var isToday = (d === todayMiami());
     html += '<th'+(isToday?' class="today"':'')+(clickable?' title="Click to fill this day\'s roster" onclick="openRoster(\''+d+'\')"':'')+'>'
-      + (isToday?'TODAY<br>':'') + fmtDate(d).replace(', ','<br>') + '</th>';
+      + '<span class="wkd">' + (isToday?'TODAY<br>':'') + fmtDate(d).replace(', ','<br>') + '</span>'
+      + '<span class="wkm">' + (isToday ? 'Today' : wkShortDay(d)) + '<br>' + (+d.split('-')[2]) + '</span></th>';
   });
   html += '</tr>';
   var totCap=[], totBk=[], totCf=[];
@@ -4854,8 +4939,8 @@ function weekCardHtml(loc, clickable){
   html += '</tr></table>';
   var gaps = totCap.reduce(function(a,c,i){ return a + (c - totBk[i]); }, 0);
   html += '<div class="wk-legend"><span><i class="k wk-open"></i> open</span><span><i class="k wk-tight"></i> 1 left</span>'
-    + '<span><i class="k wk-full"></i> full</span><span><i class="k wk-x"></i> closed / blocked</span>'
-    + '<span style="margin-left:auto;font-weight:700;color:var(--dark)">'+gaps+' open slots across the 6 days</span></div>';
+    + '<span><i class="k wk-full"></i> full</span><span><i class="k wk-x"></i> closed<span class="wkl"> / blocked</span></span>'
+    + '<span style="margin-left:auto;font-weight:700;color:var(--dark)">'+gaps+' open<span class="wkl"> slots across the 6 days</span></span></div>';
   html += '</div>';
   return html;
 }
