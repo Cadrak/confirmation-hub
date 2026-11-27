@@ -73,7 +73,7 @@ body{padding-top:112px}   /* room for the fixed header (row + tabs) */
 }
 @keyframes mspin{to{transform:rotate(360deg)}}
 /* phone-only elements: hidden on PC; wrappers that don't exist for the PC layout */
-.mstat,.mtg,.av .mt,.mline,.mnote,.thide,.tl-hidbtn,.wk-mh,table.wk th .wkm,.rz-subm,.rz-mt{display:none}
+.mstat,.mtg,.av .mt,.mline,.mnote,.thide,.tl-hidbtn,.wk-mh,table.wk th .wkm,.rz-subm,.rz-mt,.rz-nb,.rz-more{display:none}
 .ttask .tx,.ttask .txi{display:contents}
 .tabpane{display:none}
 .tabpane.active{display:block}
@@ -699,36 +699,47 @@ select.agent option{color:#1c2b33;background:#fff}
   #roster-modal .rz-subm{display:inline}
   #roster-modal .rz-head,#roster-modal .rz-hint{display:none}
   #roster-modal #rz-rows{flex:1 1 auto;min-height:0;overflow-y:auto;margin:0 -10px;padding:0 10px 6px;-webkit-overflow-scrolling:touch}
-  #roster-modal .rz-gh{margin:10px 0 5px}
-  #roster-modal .rz-foot{position:static;flex:0 0 auto;margin:0 -10px;padding:7px 10px calc(8px + env(safe-area-inset-bottom));flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:6px}
-  #roster-modal .rz-foot-l,#roster-modal .rz-foot-r{flex-wrap:nowrap;gap:5px}
-  #roster-modal .rz-foot-l{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}   /* swipe for the import buttons */
-  #roster-modal .rz-foot-l::-webkit-scrollbar{display:none}
-  #roster-modal .rz-foot-l .btn{flex:0 0 auto;padding:8px 11px;font-size:11px;white-space:nowrap}
-  #roster-modal .rz-foot-l,#roster-modal .rz-foot-r{min-width:0}
-  #roster-modal .rz-foot-r .btn{flex:1 1 auto;min-width:0;padding:10px 6px;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #roster-modal .rz-foot-r .btn.ghost{flex:0 0 auto;padding:10px 12px}
-  /* each client = small card: name + time · phone + status · Face/Body, language, deposit, source, delete · notes */
-  #roster-modal .rz-grid:not(.rz-head){grid-template-columns:42px 42px 42px 1fr 50px 40px;
-    grid-template-areas:"nm nm nm nm tm tm" "ph ph ph st st st" "mt mt dp sr sr dl" "nt nt nt nt nt nt";
+  #roster-modal .rz-gh{margin:8px 0 4px;padding:2px 10px;border-radius:8px}
+  #roster-modal .rz-gh b{font-size:12px}
+  #roster-modal .rz-gh span{font-size:11px}
+  /* bottom bar: one row — ⋯ (menu) · Save & next day · ✓ Save; Close hidden (the ✕ does the same) */
+  #roster-modal .rz-foot{position:relative;flex:0 0 auto;margin:0 -10px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));flex-wrap:nowrap;gap:0}
+  #roster-modal .rz-foot-r{flex:1 1 auto;min-width:0;flex-wrap:nowrap;gap:6px}
+  #roster-modal .rz-foot-r .btn{min-height:44px;padding:10px 8px;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  #roster-modal .rz-foot-r .btn[onclick="closeRoster()"]{display:none}
+  #roster-modal .rz-foot-r .rz-more{display:block;flex:0 0 44px;padding:0;font-size:20px;line-height:1}
+  #roster-modal .rz-foot-r .btn.dark{flex:1 1 auto}
+  #roster-modal .rz-foot-r .btn.primary{flex:1.2 1 auto;order:3}
+  #roster-modal .rz-foot-l{display:none}
+  #roster-modal .rz-foot.menu .rz-foot-l{display:flex;flex-direction:column;align-items:stretch;gap:4px;position:absolute;left:10px;bottom:calc(100% + 4px);z-index:5;
+    background:#fff;border:1px solid #dfeaea;border-radius:14px;padding:6px;box-shadow:0 8px 28px rgba(0,0,0,.18);min-width:210px}
+  #roster-modal .rz-foot.menu .rz-foot-l .btn{text-align:left;min-height:44px;padding:10px 14px;font-size:13px;border-radius:10px}
+  #roster-modal .rz-foot.menu .rz-more{background:var(--dark);color:#fff}
+  /* each client = small card, 3 lines: name + time · phone + status · Face/Body, language, deposit, source, 📝, ✕ (+ notes when open) */
+  #roster-modal .rz-grid:not(.rz-head){grid-template-columns:42px 42px 42px 1fr 42px 42px;
+    grid-template-areas:"nm nm nm nm tm tm" "ph ph ph st st st" "mt mt dp sr nb dl" "nt nt nt nt nt nt";
     gap:5px;padding:7px 6px 7px 12px;margin-bottom:7px;border:1px solid #e6eeee;background:#fff}
-  #roster-modal .rz-grid > :nth-child(1){grid-area:nm}
+  #roster-modal .rz-grid > :nth-child(1){grid-area:nm;font-weight:700}
   #roster-modal .rz-grid > :nth-child(2){grid-area:tm}
   #roster-modal .rz-grid > :nth-child(3),#roster-modal .rz-grid > :nth-child(4){display:none}
   #roster-modal .rz-grid > :nth-child(5){grid-area:dp}
   #roster-modal .rz-grid > :nth-child(6){grid-area:sr}
   #roster-modal .rz-grid > :nth-child(7){grid-area:ph}
-  #roster-modal .rz-grid > :nth-child(8){grid-area:nt}
+  #roster-modal .rz-grid > :nth-child(8){grid-area:nt;display:none}
+  #roster-modal .rz-grid.rz-nopen > :nth-child(8){display:block}
   #roster-modal .rz-grid > :nth-child(9){grid-area:st}
-  #roster-modal .rz-grid > :nth-child(10){grid-area:dl;height:40px}
+  #roster-modal .rz-grid > :nth-child(10){grid-area:dl;height:42px;margin-left:auto;width:42px}
   #roster-modal .rz-grid > .rz-mt{grid-area:mt;display:flex;gap:5px;align-items:center}
-  #roster-modal .rz-grid input,#roster-modal .rz-grid select{min-height:40px;font-size:14px;padding:7px 7px}
-  #roster-modal .rz-grid > :nth-child(1){font-weight:700}
-  #roster-modal .rz-grid > :nth-child(8){min-height:34px;font-size:12.5px;font-style:italic}
-  #roster-modal .rz-grid .rz-other input{min-height:40px}
-  #roster-modal .rz-tg{flex:0 0 42px;height:40px;border:1px solid #dfeaea;border-radius:10px;background:#fff;font-size:19px;line-height:1;cursor:pointer;padding:0}
+  #roster-modal .rz-grid > .rz-nb{grid-area:nb;display:block}
+  #roster-modal .rz-grid input,#roster-modal .rz-grid select{min-height:42px;font-size:14px;padding:7px 7px}
+  #roster-modal .rz-grid > :nth-child(8){min-height:38px;font-size:13px;font-style:italic}
+  #roster-modal .rz-grid .rz-other input{min-height:42px}
+  #roster-modal .rz-tg,#roster-modal .rz-nb{flex:0 0 42px;width:42px;height:42px;border:1px solid #dfeaea;border-radius:10px;background:#fff;font-size:19px;line-height:1;cursor:pointer;padding:0}
+  #roster-modal .rz-nb{font-size:17px;filter:grayscale(1);opacity:.45}
+  #roster-modal .rz-nb.has{filter:none;opacity:1;border-color:var(--primary)}
+  #roster-modal .rz-grid.rz-nopen .rz-nb{background:var(--primary-soft);border-color:var(--primary);filter:none;opacity:1}
   #roster-modal .rz-mt .lsug{font-size:10.5px}
-  #roster-modal .rz-grid .dep{height:40px;border-radius:10px}
+  #roster-modal .rz-grid .dep{height:42px;border-radius:10px}
   #roster-modal .rz-grid .dep span{font-size:0}
   #roster-modal .rz-grid .dep span::after{content:'💲';font-size:18px;filter:grayscale(1);opacity:.3}
   #roster-modal .rz-grid .dep.on{background:var(--green);border-color:var(--green-b)}
@@ -764,7 +775,7 @@ select.agent option{color:#1c2b33;background:#fff}
     <div class="hrow">
       <div class="brand">
         <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea">
-        <h1 title="Confirmation Hub 2.2.1">Confirmation Hub <span class="hver">2.2.1</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
+        <h1 title="Confirmation Hub 2.2.2">Confirmation Hub <span class="hver">2.2.2</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
       </div>
       <div class="hctl">
         <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">🔄 Refresh</button>
@@ -1075,7 +1086,7 @@ select.agent option{color:#1c2b33;background:#fff}
     <div id="rz-rows"></div>
     <div class="rz-hint">Import: Vagaro → Reports → Appointments Summary (.xlsx). Imports into <b id="imp-loc-name">this location</b>. · 📞 Phones: Vagaro → Reports → Customers (Mobile column) — matched to the roster by full name, any location. · 📂 Or just drop both files in the <b>Solea Imports</b> Drive folder (Brickell / Sunny Isles subfolders) — they import by themselves in ~2 min.</div>
     <div class="rz-foot">
-      <div class="rz-foot-l">
+      <div class="rz-foot-l" onclick="rzMenu(false)">
         <button class="btn ghost sm" onclick="rzAdd()">＋ Add another</button>
         <button class="btn dark sm" onclick="document.getElementById('imp-file').click()">📥 Import Vagaro file</button>
         <button class="btn dark sm" onclick="document.getElementById('imp-ph-file').click()" title="Vagaro → Reports → Customers (First Name, Last Name, Mobile)">📞 Import phones</button>
@@ -1083,6 +1094,7 @@ select.agent option{color:#1c2b33;background:#fff}
         <input type="file" id="imp-ph-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="importPhonesFile(this.files[0]); this.value='';">
       </div>
       <div class="rz-foot-r">
+        <button class="btn ghost rz-more" type="button" onclick="rzMenu()" title="More" aria-label="More: add another, import">⋯</button>
         <button class="btn ghost" onclick="closeRoster()">Close</button>
         <button class="btn dark" onclick="rzSaveNext()">✓ Save &amp; next day →</button>
         <button class="btn primary" onclick="rzSaveClose()">✓ Save</button>
@@ -2367,6 +2379,15 @@ function rzSet(i, f, v){
   if(f === 'lang') r.lx = lxLock(r.lx);                   /* manual language change → locked, suggestion cleared */
   if(f === 'status') rzRender();                         /* actualiza el color de la franja */
 }
+/* phone: 📝 shows / hides the notes field of a row (just the view — nothing is saved) */
+function rzNotes(i){
+  var r = RZ.rows[i]; if(!r) return;
+  var open = r._nOpen != null ? r._nOpen : !!String(r.notes||'').trim();
+  r._nOpen = !open; rzRender();
+  if(r._nOpen){ var g = document.querySelectorAll('#rz-rows .rz-grid'); g.forEach(function(x){ var b = x.querySelector('.rz-nb'); if(b && b.getAttribute('onclick') === 'rzNotes('+i+')'){ var n = x.children[7]; if(n){ n.focus(); } } }); }
+}
+/* phone: "⋯" menu with Add another / Import Vagaro file / Import phones */
+function rzMenu(on){ var f = document.querySelector('#roster-modal .rz-foot'); if(f) f.classList.toggle('menu', on == null ? !f.classList.contains('menu') : !!on); }
 function rzLsug(i){ var r = RZ.rows[i]; if(!r) return; r.lang = lsugOf(r.lx) || r.lang; r.lx = lxLock(r.lx); rzRender(); }
 /* color del borde por estado (franja a la izquierda de cada fila) */
 var RZ_ST = {'Confirmed':'conf','No confirmation required':'none','Showed':'show','Left VM':'vm','Canceled':'bad','No-show':'bad','Rescheduled':'resched','Canceled same day - rescheduled':'csr','Moved':'moved'};
@@ -2378,7 +2399,8 @@ function rzRowHtml(r,i){
           + ' onchange="rzSet('+i+',\'slotText\',this.value);rzRender()">'
           + '<button type="button" title="Back to the slot list" onclick="rzSet('+i+',\'slot\',SLOTS[RZ.rows['+i+'].loc][0]);rzRender()">↩</button></span>'
       : '<select onchange="rzSet('+i+',\'slot\',this.value)">'+opts(SLOTS[r.loc], r.slot)+'<option value="__other">Other…</option></select>';
-    return '<div class="rz-grid rz-st-'+(RZ_ST[r.status]||'pend')+(offBook(r.status)?' rz-off':'')+(r.badTime?' bad':'')+'">'
+    var nOpen = r._nOpen != null ? r._nOpen : !!String(r.notes||'').trim();     /* phone: notes field open? (not saved) */
+    return '<div class="rz-grid rz-st-'+(RZ_ST[r.status]||'pend')+(offBook(r.status)?' rz-off':'')+(r.badTime?' bad':'')+(nOpen?' rz-nopen':'')+'">'
       + '<input type="text" placeholder="Full name" value="'+esc(r.name)+'" oninput="rzSet('+i+',\'name\',this.value)">'
       + timeCell
       + '<select onchange="rzSet('+i+',\'type\',this.value)">'+opts(TYPES, r.type)+'</select>'
@@ -2396,6 +2418,7 @@ function rzRowHtml(r,i){
         + '<button type="button" class="rz-tg" title="Language — tap to switch" onclick="rzSet('+i+',\'lang\',\''+(r.lang==='ES'?'EN':'ES')+'\');rzRender()">'+(r.lang==='ES'?'🇪🇸':'🇺🇸')+'</button>'
         + (lsugOf(r.lx) && !/#LLOCK/.test(r.lx||'') && lsugOf(r.lx) !== r.lang ? '<b class="lsug" title="Suggested from this client’s messages — tap to use it" onclick="rzLsug('+i+')">?'+lsugOf(r.lx)+'</b>' : '')
       + '</span>'
+      + '<button type="button" class="rz-nb'+(String(r.notes||'').trim()?' has':'')+'" title="Notes" aria-label="Show / hide notes" onclick="rzNotes('+i+')">📝</button>'
       + '</div>';
 }
 /* Filas guardadas agrupadas por horario; las filas nuevas (sin guardar) van aparte, al final,
