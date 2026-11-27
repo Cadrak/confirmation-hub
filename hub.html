@@ -70,7 +70,7 @@ body{padding-top:112px}   /* room for the fixed header (row + tabs) */
   .tabs .m-only .ti{color:#cfe3e2}
   .tabs .badge-n{position:absolute;top:3px;left:50%;margin-left:6px;padding:0 5px;font-size:10px;line-height:15px;min-width:15px}
   #m-refresh.spin .ti{animation:mspin .8s linear infinite}
-  body{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+  body{padding-bottom:calc(46px + env(safe-area-inset-bottom))}
   .toast.show{bottom:calc(78px + env(safe-area-inset-bottom))}
 }
 @keyframes mspin{to{transform:rotate(360deg)}}
@@ -651,14 +651,16 @@ select.agent option{color:#1c2b33;background:#fff}
 @keyframes swl{from{transform:translateX(40px);opacity:.4}to{transform:none;opacity:1}}
 @keyframes swr{from{transform:translateX(-40px);opacity:.4}to{transform:none;opacity:1}}
 @media(prefers-reduced-motion:reduce){.tabpane.swl,.tabpane.swr{animation:none}}
-/* ===== v2.3.3 — footer always at the bottom of the screen ===== */
-header ~ .container{min-height:calc(100vh - 190px)}
-footer b{color:#cfe3e2;font-weight:700}
-footer .ft-l,footer .ft-r{display:inline-block}
+/* ===== v2.3.4 — footer: always at the bottom (short pages) or after the content (long pages) ===== */
+.hub-root{display:flex;flex-direction:column}
+.hub-root > header ~ .container{flex:1 0 auto;width:100%}
+.hub-root > footer{margin-top:auto;flex:0 0 auto}
+footer .ft-by{color:#cfe3e2;font-weight:500}
+footer .ft-ver{opacity:.7;font-size:11px}
 @media(max-width:760px){
-  header ~ .container{min-height:calc(100vh - 205px);min-height:calc(100dvh - 205px)}
   footer{font-size:11px;line-height:1.6;padding:12px 16px}
   footer .ft-l,footer .ft-r{display:block}
+  footer .ft-sep{display:none}
 }
 /* ===== v2.3.2 — send queue ("Start sending") redesign, PC + phone ===== */
 #send-modal .modal{max-width:640px}
@@ -963,7 +965,7 @@ button.sqp{cursor:pointer}
     <div class="hrow">
       <div class="brand">
         <img src="https://assets.cdn.filesafe.space/Jo8wAqjoEpXEZuJq62xM/media/6a7aeebd1eb55bdfc3df8487.png" alt="Solea">
-        <h1 title="Confirmation Hub 2.3.3">Confirmation Hub <span class="hver">2.3.3</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
+        <h1 title="Confirmation Hub 2.3.4">Confirmation Hub <span class="hver">2.3.4</span> <small class="sync"><span class="dot" id="hsync-dot"></span><span id="hsync-txt">local mode</span></small></h1>
       </div>
       <div class="hctl">
         <button class="hbtn" id="refresh-btn" onclick="refreshNow()" title="Refresh">🔄 Refresh</button>
@@ -1310,7 +1312,7 @@ button.sqp{cursor:pointer}
 
 <div class="toast" id="toast"></div>
 
-<footer><span class="ft-l"><b>Solea Confirmation Hub</b> · Designed &amp; developed by <b>Andres F</b></span> <span class="ft-r">© 2026 · All rights reserved · For internal use by Solea Medical Spa</span></footer>
+<footer><span class="ft-l">Solea Medical Spa · Confirmation Hub</span><span class="ft-sep"> — </span><span class="ft-r"><span class="ft-by">Designed and developed by Andres</span> · © <span id="ft-year">2026</span> · Internal use only<span class="ft-ver" id="ft-ver"></span></span></footer>
 
 <script>
 /* Solea Confirmation Hub
@@ -2119,6 +2121,21 @@ if(MOB_MQ){
   if(MOB_MQ.addEventListener) MOB_MQ.addEventListener('change', onMq); else if(MOB_MQ.addListener) MOB_MQ.addListener(onMq);
 }
 mobileFit();
+/* footer at the bottom: the hub's own root is a flex column at least as tall as the visible screen
+   (minus what the page puts above it and the space reserved for the phone tab bar) */
+function hubRootFit(){
+  var h = document.querySelector('header'); if(!h) return;
+  var root = h.parentElement; if(!root) return;
+  root.classList.add('hub-root');
+  var y = document.getElementById('ft-year'); if(y) y.textContent = new Date().getFullYear();
+  var v = document.getElementById('ft-ver'), hv = document.querySelector('.brand h1 .hver'); if(v && hv) v.textContent = ' · v' + hv.textContent;
+  if(root === document.body){ root.style.minHeight = window.innerHeight + 'px'; return; }   /* body: border-box, its paddings are inside */
+  var cs = getComputedStyle(document.body);
+  var top = root.getBoundingClientRect().top + window.scrollY;
+  root.style.minHeight = Math.max(0, window.innerHeight - top - parseFloat(cs.paddingBottom || 0)) + 'px';
+}
+hubRootFit();
+window.addEventListener('resize', hubRootFit);
 /* ---------- phone v2.2.3: day pills, ⓘ help, scheduled line, Settings as a tab ---------- */
 function dpillSet(id, d){
   var el = document.getElementById(id+'-pill'); if(!el || !d) return;
